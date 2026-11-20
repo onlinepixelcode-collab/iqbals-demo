@@ -117,7 +117,7 @@ function mnavHTML() {
     </div>
     <div class="mnav__panel" data-mpanel="menu" ${mnavTab === 'menu' ? '' : 'hidden'}>
       <a class="mnav__me" href="${me ? '#/account' : '#/login'}"><span class="mnav__av">${me ? esc(me.name[0]) : ICON.user}</span>
-        <span><b>My Butcher</b><small>${me ? `Salaam ${esc(me.name.split(' ')[0])} · ${pointsBalance()} Rewards points` : 'Sign in or register · orders, re-order & rewards'}</small></span>${ICON.arrow}</a>
+        <span><b>My Butcher</b><small>${me ? `Welcome back, ${esc(me.name.split(' ')[0])} · ${pointsBalance()} Rewards points` : 'Sign in or register · orders, re-order & rewards'}</small></span>${ICON.arrow}</a>
       <nav class="mnav__grid" aria-label="Main">${TILES.map(([h, l, i], k) => `<a href="${h}" style="--i:${k}">${ICON[i]}<span>${l}</span></a>`).join('')}</nav>
       <p class="mnav__label">Services &amp; tools</p>
       <ul class="mnav__list">${SERVICES.filter(([h]) => !['#/cut-studio', '#/weekly-box'].includes(h)).map(([h, l, dsc, i]) => `<li><a href="${h}">${ICON[i].replace('<svg', '<svg class="mnav__ico"')}<span><b>${l}</b><small>${dsc}</small></span>${ICON.arrow}</a></li>`).join('')}</ul>
@@ -282,37 +282,52 @@ function lineHTML(l) {
 /* ---------------- FOOTER ---------------- */
 export function renderFooter() {
   const f = $('#footer');
-  f.classList.add('wood');
+  f.classList.remove('wood');
+  f.classList.add('ft');
+  const col = (title, links) => `<div class="ft__col"><h4>${title}</h4><ul>${links.map(([h, l]) => `<li><a href="${h}">${l}</a></li>`).join('')}</ul></div>`;
   f.innerHTML = `
-    <div class="gingham gingham-strip"></div>
-    <div class="footer__top wrap">
-      <div class="footer__brand">${logoWide({ h: 160 })}<div><p class="footer__tag">We make a difference!</p><p class="lead" style="margin-top:14px">Premium NIHT certified halaal meat, cut by hand in Benoni and Lenasia.</p></div></div>
-      <div class="footer__cols">
-        <div><h4>Shop</h4><ul>
-          <li><a href="#/shop?cat=beef">Beef</a></li><li><a href="#/shop?cat=lamb">Lamb &amp; Mutton</a></li><li><a href="#/shop?cat=chicken">Chicken</a></li>
-          <li><a href="#/shop?cat=braai">Braai Packs</a></li><li><a href="#/eid">Eid &amp; Ramadan</a></li><li><a href="#/shop?cat=bakery">Rotis &amp; Bakery</a></li><li><a href="#/weekly-box">Iqbal’s Weekly Box</a></li></ul></div>
-        <div><h4>Help</h4><ul>
-          <li><a href="#/account">My account</a></li><li><a href="#/cut-to-order">Cut to order</a></li><li><a href="#/guide">Cooking guide</a></li>
-          <li><a href="#/recipes">Recipes</a></li><li><a href="#/contact">Contact us</a></li><li><a href="#/delivery">Delivery areas</a></li><li><a href="#/functions">Functions &amp; catering</a></li><li><a href="#/meal-planner">Meal planner</a></li><li><a href="#/rewards">Iqbal’s Rewards</a></li><li><a href="#/game">Flying Steak game</a></li><li><a href="#/shipping">Shipping policy</a></li><li><a href="#/returns">Returns &amp; refunds</a></li><li><a href="#/admin">Staff login</a></li><li><button data-open-chat class="link-plain">Ask the Butcher</button></li></ul></div>
-        <div><h4>Visit us</h4><ul>
-          ${BRANCHES.map((b) => `<li><b>${b.name}</b><br><span class="muted">${b.address}</span><br><a href="tel:${b.phone.replace(/\s/g, '')}">${b.phone}</a> · <span data-open-status="${b.id}">${openStatus(b).label}</span><br><small class="muted">${b.hoursLabel}</small></li>`).join('')}
-          </ul></div>
-        <div><h4>Crazy specials in your inbox</h4>
-          <p class="muted" style="font-size:16px">Weekly specials, Saturday giveaways and new arrivals. No spam. Unsubscribe any time; see our <a href="#/privacy" style="text-decoration:underline">Privacy Policy</a>.</p>
-          <form class="news" data-news novalidate><label class="sr" for="newsEmail">Email</label><input class="input" id="newsEmail" type="email" placeholder="you@email.com" required><button class="btn" type="submit">Join</button></form>
-          <div class="socials">
-            <a href="${BUSINESS.instagram}" target="_blank" rel="noopener" aria-label="Instagram">${ICON.instagram}</a>
-            <a href="${BUSINESS.facebook}" target="_blank" rel="noopener" aria-label="Facebook">${ICON.facebook}</a>
-            <a href="https://wa.me/${BRANCHES[0].phoneIntl}" target="_blank" rel="noopener" aria-label="WhatsApp">${ICON.whatsapp}</a>
-          </div>
-          ${halaalSeal('footer__seal')}
-        </div>
+    <div class="ft__check" aria-hidden="true"></div>
+    <div class="ft__mark" aria-hidden="true">IQBAL’S</div>
+    <div class="wrap ft__cta">
+      <div><p class="ft__kicker">Hand-cut · NIHT certified halaal</p><h2 class="ft__headline">Fresh cuts, <span>delivered.</span></h2></div>
+      <div class="ft__cta-btns">
+        <a class="ft__btn ft__btn--y" href="#/shop">Shop now ${ICON.arrow}</a>
+        <a class="ft__btn" href="https://wa.me/${BRANCHES[0].phoneIntl}?text=${encodeURIComponent("Hi Iqbal's! I'd like to place an order:")}" target="_blank" rel="noopener">${ICON.whatsapp} WhatsApp an order</a>
       </div>
     </div>
-    <div class="wrap footer__bottom">
-      <span>© ${new Date().getFullYear()} Iqbal’s Meat &amp; Deli. All meat NIHT certified halaal.</span>
-      <nav class="footer__legal" aria-label="Legal"><a href="#/terms">Terms &amp; Conditions</a><a href="#/privacy">Privacy Policy</a><a href="#/shipping">Shipping Policy</a><a href="#/returns">Returns &amp; Refunds</a></nav>
-      <span>Website by <a href="${BUSINESS.agency.url}" target="_blank" rel="noopener">Pixel Code</a></span>
+    <div class="wrap ft__top">
+      <div class="ft__brand">
+        <a href="#/" class="ft__logo" aria-label="Iqbal's Meat & Deli home">${logoWide({ h: 72 })}</a>
+        <p class="ft__tag">“${BUSINESS.tagline}”</p>
+        <p class="ft__about">Premium halaal beef, lamb and chicken, cut by hand in Benoni and Lenasia. Plus the rotis everyone talks about.</p>
+        <div class="ft__badges"><span class="ft__badge">${ICON.shield} NIHT certified halaal</span><a class="ft__badge" href="${BUSINESS.googleProfile}" target="_blank" rel="noopener">${ICON.star} ${BUSINESS.rating} · ${BUSINESS.reviewCount} Google reviews</a></div>
+        <div class="ft__social">
+          <a href="${BUSINESS.instagram}" target="_blank" rel="noopener" aria-label="Instagram">${ICON.instagram}</a>
+          <a href="${BUSINESS.facebook}" target="_blank" rel="noopener" aria-label="Facebook">${ICON.facebook}</a>
+          <a href="https://wa.me/${BRANCHES[0].phoneIntl}" target="_blank" rel="noopener" aria-label="WhatsApp">${ICON.whatsapp}</a>
+        </div>
+      </div>
+      ${col('Shop', [['#/shop', 'All products'], ['#/home/specials', 'Crazy Specials'], ['#/weekly-box', 'Weekly Box'], ['#/cut-studio', 'Cut Studio'], ['#/eid', 'Eid &amp; Ramadan'], ['#/functions', 'Functions &amp; catering']])}
+      ${col('Help', [['#/account', 'My Butcher'], ['#/delivery', 'Delivery areas'], ['#/contact', 'Contact us'], ['#/recipes', 'Recipes'], ['#/guide', 'Cooking guide'], ['#/rewards', 'Iqbal’s Rewards'], ['#/game', 'Flying Steak game']])}
+      <div class="ft__col ft__col--branches"><h4>Our branches</h4>
+        ${BRANCHES.map((b) => { const s = openStatus(b); return `<div class="ft__branch">
+          <div class="ft__branch-top"><b>${b.name}</b><span class="ft__status ${s.open ? 'is-open' : ''}"><i></i><span data-open-status="${b.id}">${s.label}</span></span></div>
+          <span class="ft__addr">${b.address}</span>
+          <span class="ft__links"><a href="tel:${b.phone.replace(/\s/g, '')}">${ICON.phone} ${b.phone}</a><a href="https://wa.me/${b.phoneIntl}" target="_blank" rel="noopener">${ICON.whatsapp} WhatsApp</a></span>
+        </div>`; }).join('')}
+      </div>
+    </div>
+    <div class="wrap ft__newsrow">
+      <div><b>Crazy Specials in your inbox</b><span>Every Wednesday. No spam, unsubscribe any time (<a href="#/privacy">Privacy Policy</a>).</span></div>
+      <form class="ft__news" data-news novalidate><label class="sr" for="newsEmail">Email address</label><input id="newsEmail" type="email" placeholder="you@email.com" required><button type="submit">Subscribe</button></form>
+    </div>
+    <div class="ft__bar">
+      <div class="wrap ft__bottom">
+        <span>© ${new Date().getFullYear()} Iqbal’s Meat &amp; Deli. All rights reserved.</span>
+        <nav class="ft__legal" aria-label="Legal"><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/shipping">Shipping</a><a href="#/returns">Returns</a><a href="#/admin">Staff</a></nav>
+        <div class="ft__pay" aria-label="Payment methods"><span>VISA</span><span>Mastercard</span><span>Instant EFT</span><span>Cash</span></div>
+        <span class="ft__by">Website by <a href="${BUSINESS.agency.url}" target="_blank" rel="noopener">Pixel Code</a></span>
+      </div>
     </div>`;
   $('[data-news]', f).addEventListener('submit', (e) => {
     e.preventDefault();

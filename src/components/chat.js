@@ -37,7 +37,7 @@ export function initChat() {
     if (innerWidth < 720) stopScroll();
     if (!greeted) {
       greeted = true;
-      bot({ text: '<p>Salaam! 👋 I’m <b>Iqbal’s Butcher Assistant</b>.</p><p>Ask me which cut to use, how much meat to buy for a braai, cooking times, today’s specials, delivery or our hours.</p>' });
+      bot({ text: '<p>Welcome to Iqbal’s Meat &amp; Deli! 👋 I’m <b>Iqbal’s Butcher Assistant</b>.</p><p>Ask me which cut to use, how much meat to buy for a braai, cooking times, today’s specials, delivery or our hours.</p>' });
     }
     setTimeout(() => input.focus(), 400);
   };

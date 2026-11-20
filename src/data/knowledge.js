@@ -155,7 +155,7 @@ const INTENTS = [
   {
     id: 'hello',
     words: ['hi', 'hello', 'hey', 'salaam', 'salam', 'morning', 'afternoon', 'evening', 'howzit'],
-    reply: () => ({ text: '<p>Salaam! I’m Iqbal’s Butcher Assistant. Ask me about cuts, quantities, cooking times, today’s specials or delivery.</p>' }),
+    reply: () => ({ text: '<p>Welcome to Iqbal’s Meat &amp; Deli! I’m Iqbal’s Butcher Assistant. Ask me about cuts, quantities, cooking times, today’s specials or delivery.</p>' }),
   },
 ];
 

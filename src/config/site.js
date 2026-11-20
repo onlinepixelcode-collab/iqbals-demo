@@ -104,6 +104,8 @@ export const SEASONAL = {
   eidLabel: 'Eid al-Adha',
   eidDate: '2027-05-16', // expected date (moon sighting); pre-orders close 7 days before
   ramadanLabel: 'Ramadan iftaar packs',
+  ramadanStart: '2027-02-08', // expected first day of Ramadan 1448 (moon sighting)
+  ramadanEnd: '2027-03-09', // expected last day; Eid al-Fitr follows
 };
 
 /* Weekly "crazy specials" end this weekday/time (Sunday 18:30). */

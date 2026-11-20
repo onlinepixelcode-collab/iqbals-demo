@@ -1,7 +1,7 @@
 /* =====================================================================
    HOME · the "wow" scroll
    ===================================================================== */
-import { BUSINESS, BRANCHES, IMG, INSTAGRAM_POSTS, SPECIALS_END, COMPETITION, u } from '../config/site.js';
+import { BUSINESS, BRANCHES, DELIVERY, IMG, INSTAGRAM_POSTS, SPECIALS_END, COMPETITION, SEASONAL, u } from '../config/site.js';
 import { PRODUCTS, CATEGORIES, productById, unitPrice } from '../data/products.js';
 import { REVIEWS, MEAT_MAP } from '../data/content.js';
 import { $, $$, ICON, money, esc, img, toast, flyToCart, reduceMotion, isTouch, openStatus, hoursTable, weightLabel } from '../lib/ui.js';
@@ -21,6 +21,7 @@ const STORY = [
 /* ---------------- RENDER ---------------- */
 export function render() {
   const specials = PRODUCTS.filter((p) => p.special);
+  const season = seasonal();
   return `
   <section class="hero" data-theme="light" aria-label="Welcome">
     <div class="hero__bg wood"></div>
@@ -28,12 +29,12 @@ export function render() {
     ${halaalSeal('hero__seal')}
     <div class="wrap hero__inner">
       <div>
-        <p class="eyebrow">Benoni · Lenasia · Since day one</p>
+        <p class="eyebrow">Benoni · Lenasia · NIHT certified halaal</p>
         <h1 data-hero-split>Cut <span class="it">above.</span><br>Since day one.</h1>
         <p class="hero__tag" data-hero-fade>“${BUSINESS.tagline}”</p>
         <div class="hero__ctas" data-hero-fade>
           <a class="btn magnetic" href="#/shop">Shop Now ${ICON.arrow}</a>
-          <a class="btn btn--ghost magnetic" href="#/weekly-box">Start Weekly Delivery</a>
+          <button type="button" class="btn btn--ghost magnetic" data-jump="#specials">This week’s specials</button>
         </div>
       </div>
       <aside class="hero__side" data-hero-fade>
@@ -41,65 +42,22 @@ export function render() {
           <span class="g">${ICON.google.replace('<svg', '<svg class="g"')}</span>
           <span><b>${BUSINESS.rating}</b> <span class="stars">${ICON.star.repeat(4)}</span><small>${BUSINESS.reviewCount} Google reviews</small></span>
         </a>
-        <p class="muted" style="font-size:16px;margin:0">Premium halaal beef, lamb and chicken, hand-cut to order. Plus the rotis everyone talks about.</p>
+        <div class="hero__open">${BRANCHES.map((b) => { const s = openStatus(b); return `<button type="button" class="hero__branch" data-jump="#branches"><b>${b.name}</b><span class="status ${s.open ? '' : 'is-closed'}" data-open-status-pill="${b.id}"><i></i><span data-open-status="${b.id}">${s.label}</span></span></button>`; }).join('')}</div>
       </aside>
     </div>
     <div class="hero__scroll" aria-hidden="true">Scroll<i></i></div>
   </section>
 
-  <div class="marquee" aria-hidden="true"><div class="marquee__track">
-    ${Array(2).fill(['NIHT certified halaal', 'Hand-cut to order', 'Crazy weekly specials', 'Best rotis on the East Rand', 'Boerie rolls every weekend', 'Weekly home delivery'].map((t) => `<span>${t}</span>`).join('')).join('')}
-  </div></div>
-
-  <section class="story" id="story" data-theme="light" aria-label="How we work">
-    <div class="story__pin">
-      <div class="story__canvas" id="storyCanvas" aria-hidden="true"></div>
-      <div class="story__panels">
-        ${STORY.map((s, i) => `<article class="story__panel" data-story="${i}">
-          <span class="story__num">${s.n}</span><h3>${s.title}</h3><p>${s.text}</p></article>`).join('')}
-      </div>
-      ${STORY.map((s, i) => `<span class="story__label" data-label="${i}">${s.label}</span>`).join('')}
-      <div class="story__dots">${STORY.map(() => '<i></i>').join('')}</div>
-      <div class="story__bar"><span></span></div>
-    </div>
-  </section>
-
-  <section class="sec sec--light paper" data-theme="light" id="meat-map" aria-labelledby="mmTitle">
-    <div class="wrap">
-      <div class="sec-head">
-        <div><p class="eyebrow">The Meat Map</p><h2 class="h-lg" id="mmTitle" data-split>Know your <span class="it">cuts.</span></h2></div>
-        <p class="lead">Hover or tap any cut to see what it is, how to cook it, and add it straight to your cart. South African butchery names.</p>
-      </div>
-      <div class="meatmap">
-        <div>
-          <div class="meatmap__tabs" role="tablist">${Object.entries(MEAT_MAP).map(([k, v], i) => `<button class="chip ${i === 0 ? 'is-on' : ''}" role="tab" aria-selected="${i === 0}" data-animal="${k}">${v.label}</button>`).join('')}</div>
-          <div class="meatmap__stage" id="mmStage"></div>
-        </div>
-        <div class="meatmap__info" id="mmInfo" aria-live="polite"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="hcats" data-theme="light" aria-labelledby="catTitle">
-    <div class="hcats__pin">
-      <div class="hcats__head">
-        <div><p class="eyebrow">The Counter</p><h2 class="h-lg" id="catTitle" data-split>Everything, <span class="it">under one roof.</span></h2></div>
-        <a class="btn btn--ghost magnetic" href="#/shop">View all ${ICON.arrow}</a>
-      </div>
-      <div class="hcats__track" id="hcatsTrack">
-        ${CATEGORIES.map((c, i) => `<a class="hcat" href="#/shop?cat=${c.id}" data-tilt="6" data-cursor="view">
-          <div class="photo" data-hpar>${img(c.img, 700, c.name)}</div>
-          <span class="hcat__num">0${i + 1}</span>
-          <div class="hcat__body"><h3>${c.name}</h3><p>${c.blurb}</p><span class="hcat__go">Shop ${c.name.split(' ')[0]} ${ICON.arrow}</span></div>
-        </a>`).join('')}
-        <a class="hcat hcat--end" href="#/shop"><div><h3>The full<br><span class="it">counter</span></h3><p style="color:var(--ink)">${PRODUCTS.length}+ products, all halaal</p><span class="btn btn--dark">Shop now ${ICON.arrow}</span></div></a>
-      </div>
-    </div>
-  </section>
+  <nav class="quick wrap" aria-label="Quick actions">
+    <a class="quick__item" href="#/shop">${ICON.cart}<span><b>Order online</b><small>Delivery or collection</small></span></a>
+    <a class="quick__item" href="#/delivery">${ICON.truck}<span><b>Delivery areas</b><small>Free over ${money(DELIVERY.freeThreshold).replace(/\.00$/, '')}</small></span></a>
+    <a class="quick__item" href="#/cut-studio">${ICON.knife}<span><b>Cut Studio</b><small>Order it cut your way</small></span></a>
+    <div class="quick__item quick__item--wa">${ICON.whatsapp}<span><b>WhatsApp an order</b><span class="quick__wa">${BRANCHES.map((b) => `<a href="https://wa.me/${b.phoneIntl}?text=${encodeURIComponent(`Hi Iqbal's ${b.name}! I'd like to place an order:`)}" target="_blank" rel="noopener">${b.name}</a>`).join('')}</span></span></div>
+  </nav>
 
   <section class="sec" data-theme="light" id="specials" aria-labelledby="spTitle">
     <div class="wrap">
-      <div class="board wood" data-scale>
+      <div class="board wood">
         <div class="board__head">
           <h2 class="board__title" id="spTitle"><small>This week only</small>Crazy <em>Specials</em></h2>
           <div><p class="countdown__label">Specials end Sunday at 6:30 PM</p><div class="countdown" id="countdown" aria-live="off">
@@ -122,6 +80,82 @@ export function render() {
         <div class="comp__ribbon gingham" aria-hidden="true">🏆</div>
         <div><h3>${COMPETITION.title}</h3><p>${COMPETITION.text}</p></div>
         <a class="btn" href="${BUSINESS.instagram}" target="_blank" rel="noopener">Follow ${BUSINESS.instagramHandle}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec hcats2" data-theme="light" id="categories" aria-labelledby="catTitle">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><p class="eyebrow">The Counter</p><h2 class="h-lg" id="catTitle" data-split>Shop by <span class="it">category.</span></h2></div>
+        <a class="btn btn--ghost magnetic" href="#/shop">All ${PRODUCTS.length} products ${ICON.arrow}</a>
+      </div>
+      <div class="cgrid" data-reveal="stagger">
+        ${CATEGORIES.map((c) => `<a class="cgrid__item" href="#/shop?cat=${c.id}" data-cursor="view">
+          <div class="photo">${img(c.img, 600, c.name)}</div>
+          <div class="cgrid__body"><h3>${c.name}</h3><small>${PRODUCTS.filter((p) => p.category === c.id).length} items · from ${money(Math.min(...PRODUCTS.filter((p) => p.category === c.id).map(unitPrice)))}</small></div>
+        </a>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" data-theme="light" id="branches" aria-labelledby="brTitle" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head"><div><p class="eyebrow">Visit us</p><h2 class="h-lg" id="brTitle" data-split>Two shops. <span class="it">One standard.</span></h2></div>
+      <p class="lead">Pop in for the counter and the weekend boerie rolls, or order ahead and collect.</p></div>
+      <div class="bmini">${BRANCHES.map(branchMini).join('')}</div>
+    </div>
+  </section>
+
+  ${season ? `<section class="wrap season" aria-label="${season.title}">
+    <a class="season__card" href="#/eid">
+      <span class="season__icon">${ICON.moon}</span>
+      <span><small>${season.kicker}</small><b>${season.title}</b><span>${season.text}</span></span>
+      <span class="btn btn--sm">${season.cta} ${ICON.arrow}</span>
+    </a>
+  </section>` : ''}
+
+  <section class="story" id="story" data-theme="light" aria-label="How we work">
+    <div class="story__pin">
+      <div class="story__canvas" id="storyCanvas" aria-hidden="true"></div>
+      <div class="story__panels">
+        ${STORY.map((s, i) => `<article class="story__panel" data-story="${i}">
+          <span class="story__num">${s.n}</span><h3>${s.title}</h3><p>${s.text}</p></article>`).join('')}
+      </div>
+      ${STORY.map((s, i) => `<span class="story__label" data-label="${i}">${s.label}</span>`).join('')}
+      <div class="story__dots">${STORY.map(() => '<i></i>').join('')}</div>
+      <div class="story__bar"><span></span></div>
+    </div>
+  </section>
+
+  <section class="sec sec--light paper" data-theme="light" id="meat-map" aria-labelledby="mmTitle">
+    <div class="wrap">
+      <a class="studio-teaser" href="#/cut-studio" data-reveal>
+        <span class="studio-teaser__icon">${ICON.knife}</span>
+        <span><small>New · Cut Studio</small><b>Build your cut and watch it on the bandsaw.</b><span>Choose the meat, thickness, trim, marinade and packing. We cut it exactly like that.</span></span>
+        <span class="btn">Open Cut Studio ${ICON.arrow}</span>
+      </a>
+      <div class="sec-head">
+        <div><p class="eyebrow">The Meat Map</p><h2 class="h-lg" id="mmTitle" data-split>Know your <span class="it">cuts.</span></h2></div>
+        <p class="lead">Hover or tap any cut to see what it is, how to cook it, and add it straight to your cart. South African butchery names.</p>
+      </div>
+      <div class="meatmap">
+        <div>
+          <div class="meatmap__tabs" role="tablist">${Object.entries(MEAT_MAP).map(([k, v], i) => `<button class="chip ${i === 0 ? 'is-on' : ''}" role="tab" aria-selected="${i === 0}" data-animal="${k}">${v.label}</button>`).join('')}</div>
+          <div class="meatmap__stage" id="mmStage"></div>
+        </div>
+        <div class="meatmap__info" id="mmInfo" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" data-theme="light" aria-label="Iqbal’s Weekly Box">
+    <div class="wrap">
+      <div class="band" data-scale>
+        <div class="photo">${img(IMG.assortment, 1400, '')}</div>
+        <div><p class="eyebrow">Iqbal’s Weekly Box</p><h2 class="h-lg">Good meat,<br><span class="it gold">every week.</span></h2>
+          <p class="lead" style="color:rgba(243,230,200,.85)">Family, Braai, Curry or Chicken Lovers. Or build your own. Pause, skip or cancel any time.</p></div>
+        <div style="display:grid;gap:12px;justify-items:start"><a class="btn magnetic" href="#/weekly-box">Build my box ${ICON.arrow}</a><a class="btn btn--ghost" href="#/cut-to-order">Request a special cut</a></div>
       </div>
     </div>
   </section>
@@ -172,29 +206,17 @@ export function render() {
     </div>
   </section>
 
-  <section class="sec sec--light paper" data-theme="light" aria-labelledby="whyTitle">
-    <div class="wrap">
-      <div class="sec-head"><div><p class="eyebrow">Why Iqbal’s</p><h2 class="h-lg" id="whyTitle" data-split>We make <span class="it">a difference.</span></h2></div>
-      <p class="lead">Clean shops, friendly staff and meat you can trust. Here’s what that looks like in numbers.</p></div>
-      <div class="why" data-reveal="stagger">
-        <div class="stat"><span class="stat__icon">${ICON.star}</span><b><span data-count="4.4">4.4</span><sup>★</sup></b><p>Google rating from real customers</p></div>
-        <div class="stat"><span class="stat__icon">${ICON.chat}</span><b><span data-count="572">572</span><sup>+</sup></b><p>Google reviews and counting</p></div>
-        <div class="stat"><span class="stat__icon">${ICON.pin}</span><b><span data-count="2">2</span></b><p>Branches: Benoni &amp; Lenasia</p></div>
-        <div class="stat"><span class="stat__icon">${ICON.shield}</span><b><span data-count="100">100</span><sup>%</sup></b><p>NIHT certified halaal, always</p></div>
-      </div>
-      <div class="why-feats" data-reveal="stagger">
-        <div class="why-feat">${ICON.knife}<div><b>Cut to order</b><p>Tell us the thickness, the trim and the prep. We do it while you wait.</p></div></div>
-        <div class="why-feat">${ICON.flame}<div><b>Boerie rolls outside</b><p>Every weekend the braai is lit outside the shop. Come hungry.</p></div></div>
-        <div class="why-feat">${ICON.truck}<div><b>Weekly delivery</b><p>Benoni, Boksburg, Lenasia and surrounds. Free over R750.</p></div></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="sec" data-theme="light" aria-labelledby="rvTitle">
+  <section class="sec sec--light paper" data-theme="light" id="reviews-sec" aria-labelledby="rvTitle">
     <div class="wrap">
       <div class="reviews__head">
-        <div><p class="eyebrow">Google Reviews</p><h2 class="h-lg" id="rvTitle" data-split>Loved by <span class="it">regulars.</span></h2></div>
+        <div><p class="eyebrow">Why Iqbal’s</p><h2 class="h-lg" id="rvTitle" data-split>Loved by <span class="it">regulars.</span></h2></div>
         <a class="gscore" href="${BUSINESS.googleProfile}" target="_blank" rel="noopener">${ICON.google.replace('<svg', '<svg class="g"')}<div><b>${BUSINESS.rating}</b> <span class="stars">${ICON.star.repeat(4)}</span><small>${BUSINESS.reviewCount} Google reviews · Read them all →</small></div></a>
+      </div>
+      <div class="why" data-reveal="stagger">
+        <div class="stat"><span class="stat__icon">${ICON.star}</span><b><span data-count="${BUSINESS.rating}">${BUSINESS.rating}</span><sup>★</sup></b><p>Google rating from real customers</p></div>
+        <div class="stat"><span class="stat__icon">${ICON.chat}</span><b><span data-count="${BUSINESS.reviewCount}">${BUSINESS.reviewCount}</span></b><p>Google reviews</p></div>
+        <div class="stat"><span class="stat__icon">${ICON.pin}</span><b><span data-count="${BRANCHES.length}">${BRANCHES.length}</span></b><p>Branches: Benoni &amp; Lenasia</p></div>
+        <div class="stat"><span class="stat__icon">${ICON.shield}</span><b><span data-count="100">100</span><sup>%</sup></b><p>NIHT certified halaal</p></div>
       </div>
     </div>
     <div class="rv" id="reviews" aria-label="Customer reviews, drag to browse" tabindex="0">
@@ -209,37 +231,43 @@ export function render() {
       <a class="btn btn--ghost magnetic" href="${BUSINESS.instagram}" target="_blank" rel="noopener">${ICON.instagram} Follow us</a></div>
       <div class="ig">${INSTAGRAM_POSTS.map((p) => `<a href="${BUSINESS.instagram}" target="_blank" rel="noopener" aria-label="${esc(p.caption)} on Instagram"><div class="photo" data-clip>${img(p.img, 600, p.caption)}</div><span class="ig__over">${ICON.instagram}${esc(p.caption)}</span></a>`).join('')}</div>
     </div>
-  </section>
-
-  <section class="sec" data-theme="light" id="branches" aria-labelledby="brTitle">
-    <div class="wrap">
-      <div class="sec-head"><div><p class="eyebrow">Visit us</p><h2 class="h-lg" id="brTitle" data-split>Two shops.<br><span class="it">One standard.</span></h2></div>
-      <p class="lead">Pop in for the counter, the boerie rolls and a chat with the butchers, or order ahead and collect.</p></div>
-      <div class="branches">${BRANCHES.map(branchCard).join('')}</div>
-    </div>
-  </section>
-
-  <section class="sec" data-theme="light" style="padding-top:0">
-    <div class="wrap">
-      <a class="game-teaser" href="#/game" data-cursor="view">
-        <div><p class="eyebrow">Iqbal’s Arcade</p><h2 class="h-lg">Flying <span class="it">Steak.</span></h2>
-          <p class="lead">Flap a ribeye past the cleavers and knives. Every point earns Rewards points when you’re signed in.</p>
-          <span class="btn">${ICON.game} Play now</span></div>
-        <div class="game-teaser__art" aria-hidden="true"><span class="gt-blade gt-blade--top"></span><span class="gt-steak"></span><span class="gt-blade gt-blade--bot"></span><span class="gt-coin">H</span></div>
-      </a>
-    </div>
-  </section>
-
-  <section class="sec" data-theme="light" style="padding-top:0">
-    <div class="wrap">
-      <div class="band" data-scale>
-        <div class="photo">${img(IMG.assortment, 1400, '')}</div>
-        <div><p class="eyebrow">Iqbal’s Weekly Box</p><h2 class="h-lg">Good meat,<br><span class="it gold">every week.</span></h2>
-          <p class="lead" style="color:rgba(243,230,200,.85)">Family, Braai, Curry or Chicken Lovers. Or build your own. Pause, skip or cancel any time.</p></div>
-        <div style="display:grid;gap:12px;justify-items:start"><a class="btn magnetic" href="#/weekly-box">Build my box ${ICON.arrow}</a><a class="btn btn--ghost" href="#/cut-to-order">Request a special cut</a></div>
-      </div>
-    </div>
   </section>`;
+}
+
+/* Eid / Ramadan banner: shows from 14 days before Ramadan to the end of Ramadan,
+   and from 60 days before Eid al-Adha to Eid day. Dates live in config/site.js. */
+function seasonal(now = new Date()) {
+  const day = (iso) => new Date(iso + 'T00:00:00');
+  const days = (a, b) => Math.ceil((b - a) / 864e5);
+  const eid = day(SEASONAL.eidDate);
+  const rs = day(SEASONAL.ramadanStart), re = day(SEASONAL.ramadanEnd);
+  if (now >= new Date(rs - 14 * 864e5) && now <= new Date(+re + 864e5)) {
+    const before = now < rs;
+    return { kicker: before ? `Ramadan starts in ${days(now, rs)} days (expected)` : 'Ramadan Mubarak', title: 'Iftaar packs, samosas &amp; rotis in bulk', text: 'Pre-order for the month and collect or get it delivered.', cta: 'See iftaar packs' };
+  }
+  if (now >= new Date(eid - 60 * 864e5) && now <= new Date(+eid + 864e5)) {
+    const left = days(now, eid);
+    return { kicker: left > 0 ? `${SEASONAL.eidLabel} in ${left} days (expected)` : `${SEASONAL.eidLabel} Mubarak`, title: 'Qurbani bookings are open', text: 'Sheep, goat and cow shares, slaughtered and cut by our certified team.', cta: 'Book Qurbani' };
+  }
+  return null;
+}
+
+/* compact branch card for the homepage (the full card with map lives on the contact page) */
+function branchMini(b) {
+  const s = openStatus(b);
+  const tel = b.phone.replace(/\s/g, '');
+  const today = hoursTable(b).find((r) => r.today);
+  return `<article class="bmini__card" data-reveal>
+    <div class="bmini__top"><h3>${b.name}</h3><span class="status ${s.open ? '' : 'is-closed'}" data-open-status-pill="${b.id}"><i></i><span data-open-status="${b.id}">${s.label}</span></span></div>
+    <p class="bmini__addr">${ICON.pin}<span>${b.address}</span></p>
+    <p class="bmini__today">${ICON.clock}<span>Today: <b>${today ? today.h : ''}</b></span></p>
+    <details class="bmini__hours"><summary>All trading hours</summary><table class="hours" aria-label="${b.name} trading hours"><tbody>${hoursTable(b).map((r) => `<tr class="${r.today ? 'is-today' : ''}"><td>${r.day}</td><td>${r.h}</td></tr>`).join('')}</tbody></table></details>
+    <div class="bmini__ctas">
+      <a class="btn btn--sm btn--maroon" href="tel:${tel}">${ICON.phone} Call</a>
+      <a class="btn btn--sm btn--wa" href="https://wa.me/${b.phoneIntl}" target="_blank" rel="noopener">${ICON.whatsapp} WhatsApp</a>
+      <a class="btn btn--sm btn--dark" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(b.mapQuery)}" target="_blank" rel="noopener">Directions</a>
+    </div>
+  </article>`;
 }
 
 function reviewCard(r) {
@@ -304,7 +332,7 @@ export function mount(root, params) {
   } else heroFallback(heroEl);
 
   /* HERO parallax out */
-  if (!rm) {
+  if (!rm && !lite) {
     gsap.to('.hero__inner', { yPercent: -25, opacity: 0.2, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
     gsap.to(heroEl, { scale: 1.15, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
   }
@@ -315,20 +343,8 @@ export function mount(root, params) {
   /* MEAT MAP */
   mountMeatMap(root);
 
-  /* CATEGORIES horizontal */
-  const track = $('#hcatsTrack', root);
-  if (!rm && innerWidth > 720) {
-    const dist = () => track.scrollWidth - innerWidth + 40;
-    const tween = gsap.to(track, { x: () => -dist(), ease: 'none' });
-    ScrollTrigger.create({ trigger: '.hcats', pin: '.hcats__pin', start: 'top top', end: () => '+=' + dist(), scrub: 1, animation: tween, invalidateOnRefresh: true, anticipatePin: 1 });
-    $$('[data-hpar] img', root).forEach((im) => gsap.fromTo(im, { xPercent: -8 }, { xPercent: 8, ease: 'none', scrollTrigger: { trigger: '.hcats', start: 'top top', end: () => '+=' + dist(), scrub: true } }));
-  } else {
-    track.parentElement.style.height = 'auto';
-    Object.assign(track.style, { overflowX: 'auto', width: '100%', scrollSnapType: 'x mandatory', paddingBottom: '20px' });
-    $$('.hcat', track).forEach((c) => (c.style.scrollSnapAlign = 'center'));
-    $('.hcats__pin', root).style.padding = '90px 0';
-  }
-  setupTilt(root, '.hcat[data-tilt]');
+  /* in-page jump buttons (hero → specials / branches) */
+  $$('[data-jump]', root).forEach((b) => b.addEventListener('click', () => scrollTo(b.dataset.jump)));
 
   /* SPECIALS countdown + flip */
   const cd = setInterval(() => tick(root), 1000);
@@ -409,7 +425,7 @@ function mountStory(root, lite, rm, loadScene, setScene) {
 
   setActive(0);
   ScrollTrigger.create({
-    trigger: '#story', pin: '.story__pin', start: 'top top', end: '+=' + innerHeight * 4, scrub: true, anticipatePin: 1,
+    trigger: '#story', pin: '.story__pin', start: 'top top', end: '+=' + innerHeight * 2.6, scrub: true, anticipatePin: 1,
     onUpdate: (self) => {
       const p = self.progress;
       lastP = p;

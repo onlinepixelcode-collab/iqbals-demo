@@ -93,7 +93,7 @@ export function renderAccount(params, query) {
   const user = currentUser();
   if (!user) return '';
   return `<section class="page-hero" data-theme="light" style="padding-bottom:40px"><div class="wrap">
-    <p class="eyebrow">My Butcher</p><h1 class="h-lg">Salaam, <span class="it gold">${esc(user.name.split(' ')[0])}</span></h1></div></section>
+    <p class="eyebrow">My Butcher</p><h1 class="h-lg">Welcome back, <span class="it gold">${esc(user.name.split(' ')[0])}</span></h1></div></section>
     <div class="wrap acct">
       <nav class="acct__nav" aria-label="Account">${TABS.map(([k, l, i]) => `<button data-tab="${k}">${i}${l}</button>`).join('')}<button id="logout">${ICON.arrow}Sign out</button></nav>
       <div id="tab"></div>

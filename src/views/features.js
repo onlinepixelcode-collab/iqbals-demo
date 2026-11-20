@@ -118,7 +118,7 @@ export function mountEid(root) {
     const req = saveRequest({ type: 'qurbani', name: v('qName'), cell: v('qCell'), branch: v('qBranch'), animal: q.name, qty: n, prep: v('qPrep'), day: v('qDay'), onBehalf: v('qNames'), total: q.price * n, deposit: q.deposit * n, user: state.session });
     const b = BRANCHES.find((x) => x.id === req.branch);
     form.innerHTML = thanks(`Qurbani booked · #${req.id}`, `${n} × ${q.name} on behalf of ${esc(req.onBehalf)}, ${req.prep.toLowerCase()}, collect ${req.day.toLowerCase()} at ${b.name}. Pay the ${money(req.deposit)} deposit in store or by EFT to confirm.`, b,
-      `Assalamu alaikum Iqbal's ${b.name}! Qurbani booking #${req.id}: ${n} × ${q.name}, on behalf of ${req.onBehalf}. Cut: ${req.prep}. Collect: ${req.day}. Name: ${req.name}, ${req.cell}. How do I pay the ${money(req.deposit)} deposit?`);
+      `Hi Iqbal's ${b.name}! Qurbani booking #${req.id}: ${n} × ${q.name}, on behalf of ${req.onBehalf}. Cut: ${req.prep}. Collect: ${req.day}. Name: ${req.name}, ${req.cell}. How do I pay the ${money(req.deposit)} deposit?`);
     confetti();
   });
   return () => clearInterval(t);
