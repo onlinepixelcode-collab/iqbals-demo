@@ -18,6 +18,14 @@ document.body.classList.add('is-loading');
 function runLoader() {
   return new Promise((resolve) => {
     const loader = $('#loader');
+    // the full intro plays only on the first page load of a visit (per browser session)
+    if (document.documentElement.classList.contains('intro-seen')) {
+      loader.classList.add('is-done');
+      document.body.classList.remove('is-loading');
+      requestAnimationFrame(() => { window.dispatchEvent(new Event('site:ready')); resolve(); });
+      return;
+    }
+    try { sessionStorage.setItem('iqbals.intro', '1'); } catch (e) { /* storage blocked: intro just plays again */ }
     const count = $('#loaderCount');
     const rm = reduceMotion();
     const minTime = rm ? 300 : 2900;

@@ -6,7 +6,6 @@ import { $ } from './lib/ui.js';
 import { gsap, resetMotion, setupReveals, setupThemes, setupMagnetic, scrollTo, lenis, ScrollTrigger } from './lib/motion.js';
 import { setActiveNav, closeCart } from './components/shell.js';
 import { closeModal, reduceMotion } from './lib/ui.js';
-import { logoWide } from './components/brand.js';
 
 import * as Home from './views/home.js';
 import * as Shop from './views/shop.js';
@@ -60,18 +59,12 @@ export function navigate(hash, { replace = false } = {}) {
   render();
 }
 
+/* Page change: a quick, quiet fade (the big loader only plays on arrival). */
 async function curtain(dir) {
-  const c = $('#curtain');
+  const app = $('#app');
   if (reduceMotion()) return;
-  if (dir === 'in') {
-    c.querySelector('.curtain__mark').innerHTML = logoWide({ h: 110, alt: '' });
-    await gsap.fromTo(c, { yPercent: 100 }, { yPercent: 0, duration: 0.7, ease: 'expo.inOut' });
-    gsap.to('.curtain__mark', { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' });
-  } else {
-    await gsap.to('.curtain__mark', { opacity: 0, scale: 0.9, duration: 0.25 });
-    await gsap.to(c, { yPercent: -100, duration: 0.8, ease: 'expo.inOut' });
-    gsap.set(c, { yPercent: 100 });
-  }
+  if (dir === 'in') await gsap.to(app, { opacity: 0, y: 12, duration: 0.22, ease: 'power2.in' });
+  else await gsap.fromTo(app, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out', clearProps: 'transform,opacity' });
 }
 
 async function render() {

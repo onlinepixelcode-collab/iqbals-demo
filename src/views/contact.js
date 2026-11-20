@@ -15,7 +15,7 @@ export function render() {
       <nav class="crumbs" aria-label="Breadcrumb"><a href="#/">Home</a><span>/</span><span>Contact</span></nav>
       <h1 class="h-xl" data-split>Talk to <span class="it">the butcher.</span></h1>
       <p class="lead" style="margin-top:20px">Call, WhatsApp or pop in. Orders, special cuts, functions or a question about tonight’s braai: we’re happy to help.</p>
-      <div class="contact-quick" data-reveal="stagger">
+      <div class="contact-quick">
         ${BRANCHES.map((b) => `<a class="cq" href="tel:${b.phone.replace(/\s/g, '')}">${ICON.phone}<span><small>Call ${b.name}</small>${b.phone}</span></a>
           <a class="cq cq--wa" href="https://wa.me/${b.phoneIntl}" target="_blank" rel="noopener">${ICON.whatsapp}<span><small>WhatsApp ${b.name}</small>Chat now</span></a>`).join('')}
       </div>

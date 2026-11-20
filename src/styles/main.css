@@ -1316,3 +1316,10 @@ body { background: var(--bg); }
 .auth-tabs a.is-on { background: #9b1515; color: #fff; }
 @media (max-width: 960px) { .auth-perks { display: none; } }
 @media (min-width: 961px) { .auth__art { margin-top: var(--header-h); border-radius: 0 28px 0 0; } }
+/* repeat visits: no intro loader */
+.intro-seen .loader { display: none; }
+/* contact quick links: equal, aligned tiles */
+.contact-quick { align-items: stretch; }
+.cq { min-height: 76px; height: 100%; transition: box-shadow .3s, border-color .3s; }
+.cq:hover { transform: none; border-color: rgba(155,21,21,.35); }
+.cq span { display: grid; gap: 2px; line-height: 1.2; }
