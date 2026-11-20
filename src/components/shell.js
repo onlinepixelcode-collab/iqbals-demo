@@ -30,25 +30,43 @@ const LINKS = [
 const catFrom = (id) => Math.min(...PRODUCTS.filter((p) => p.category === id).map(unitPrice));
 const catCount = (id) => PRODUCTS.filter((p) => p.category === id).length;
 
+const MEGA_TOOLS = ['#/cut-studio', '#/weekly-box', '#/home/braai', '#/delivery', '#/recipes', '#/guide', '#/rewards'];
+const priceTag = (p) => `${money(unitPrice(p))}${p.unit === 'kg' ? '<small>/kg</small>' : ''}`;
+const picksFor = (id) => {
+  const list = PRODUCTS.filter((p) => p.category === id);
+  return [...list.filter((p) => p.tags.includes('popular')), ...list.filter((p) => !p.tags.includes('popular'))].slice(0, 3);
+};
+function megaPreview(id) {
+  const c = id && CATEGORIES.find((x) => x.id === id);
+  const items = c ? picksFor(id) : PRODUCTS.filter((p) => p.special).slice(0, 3);
+  const head = c
+    ? `<span class="mega__pv-kicker">Popular in</span><b class="mega__pv-title">${c.name}</b>`
+    : `<span class="mega__pv-kicker mega__pv-kicker--hot">This week only</span><b class="mega__pv-title">Crazy <em>Specials</em></b>`;
+  const foot = c
+    ? `<a class="mega__pv-all" href="#/shop?cat=${c.id}">Shop all ${catCount(c.id)} ${c.name} ${ICON.arrow}</a>`
+    : `<a class="mega__pv-all" href="#/home/specials">All ${PRODUCTS.filter((p) => p.special).length} specials · ends Sunday 6:30 PM ${ICON.arrow}</a>`;
+  return `<div class="mega__pv-head">${head}</div>
+    <ul class="mega__pv-list">${items.map((p) => `<li>
+      <a class="mega__pv-item" href="#/product/${p.id}"><span class="photo"><img src="${u(p.img, 160)}" alt="" loading="lazy"></span>
+        <span class="mega__pv-name"><b>${esc(p.name)}</b><small>${esc(p.cut)}</small></span>
+        <span class="mega__pv-price">${p.special ? `<s>${money(p.price)}</s>` : ''}${priceTag(p)}</span></a>
+      <button type="button" class="mega__pv-add" data-add="${p.id}" aria-label="Add ${esc(p.name)} to cart">${ICON.plus}</button>
+    </li>`).join('')}</ul>${foot}`;
+}
+
 function megaHTML() {
-  const sp = PRODUCTS.filter((p) => p.special);
-  const star = sp[0];
   return `<div class="mega" id="mega" role="region" aria-label="Shop menu">
     <div class="mega__inner wrap">
-      <div class="mega__cats">
+      <div class="mega__main">
         <div class="mega__title"><span class="label">Shop by category</span><a href="#/shop" class="mega__all">Shop all ${PRODUCTS.length} products ${ICON.arrow}</a></div>
-        <div class="mega__grid">${CATEGORIES.map((c) => `<a class="mega__cat" href="#/shop?cat=${c.id}"><span class="photo"><img src="${u(c.img, 360)}" alt="" loading="lazy"></span>
-          <span class="mega__cat-body"><b>${c.name}</b><small>${catCount(c.id)} items · from ${money(catFrom(c.id))}</small></span></a>`).join('')}</div>
+        <div class="mega__grid">${CATEGORIES.map((c, i) => `<a class="mega__cat" href="#/shop?cat=${c.id}" data-mcat="${c.id}" style="--i:${i}">
+          <span class="photo"><img src="${u(c.img, 420)}" alt="" loading="lazy"></span>
+          <span class="mega__cat-body"><b>${c.name}</b><small>${catCount(c.id)} items · from ${money(catFrom(c.id)).replace(/\.00$/, '')}</small></span>
+          <span class="mega__cat-go" aria-hidden="true">${ICON.arrow}</span></a>`).join('')}</div>
       </div>
-      <div class="mega__services">
-        <span class="label">Services &amp; tools</span>
-        <ul>${SERVICES.map(([h, l, d, i]) => `<li><a href="${h}">${ICON[i]}<span><b>${l}</b><small>${d}</small></span></a></li>`).join('')}</ul>
-      </div>
-      ${star ? `<a class="mega__feature" href="#/home/specials">
-        <span class="photo"><img src="${u(star.img, 500)}" alt="" loading="lazy"></span>
-        <span class="mega__feature-body"><span class="tag tag--gingham">Crazy Specials</span><b>${star.name}</b><span><s>${money(star.price)}</s> ${money(unitPrice(star))}${star.unit === 'kg' ? '/kg' : ''}</span><small>${sp.length} specials this week · ends Sunday 6:30 PM</small><span class="btn btn--sm">See all specials ${ICON.arrow}</span></span>
-      </a>` : ''}
+      <aside class="mega__pv" id="megaPv" aria-live="polite">${megaPreview(null)}</aside>
     </div>
+    <div class="mega__tools"><div class="wrap">${SERVICES.filter(([h]) => MEGA_TOOLS.includes(h)).map(([h, l, , i]) => `<a href="${h}">${ICON[i]}<span>${l}</span></a>`).join('')}</div></div>
   </div>`;
 }
 
@@ -93,7 +111,20 @@ export function renderHeader() {
   });
   btn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown') { e.preventDefault(); open(); mega.querySelector('a')?.focus(); } });
   mega.addEventListener('focusout', (e) => { if (!header.contains(e.relatedTarget)) close(); });
-  mega.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+  mega.addEventListener('click', (e) => { if (e.target.closest('a')) close(); });
+  /* hover a category → preview its popular products (defaults to Crazy Specials) */
+  const pv = $('#megaPv', header);
+  let pvCur = null, pvT = 0;
+  const showPv = (id) => {
+    if (id === pvCur) return;
+    pvCur = id;
+    clearTimeout(pvT);
+    pv.classList.add('is-swap');
+    pvT = setTimeout(() => { pv.innerHTML = megaPreview(id); pv.classList.remove('is-swap'); }, 110);
+    $$('[data-mcat]', mega).forEach((x) => x.classList.toggle('is-on', x.dataset.mcat === id));
+  };
+  $$('[data-mcat]', mega).forEach((el) => { el.addEventListener('mouseenter', () => showPv(el.dataset.mcat)); el.addEventListener('focus', () => showPv(el.dataset.mcat)); });
+  btn.addEventListener('mouseenter', () => showPv(null));
   $('#megaScrim', header).addEventListener('click', close);
   document.addEventListener('keydown', (e) => e.key === 'Escape' && close());
   window.addEventListener('hashchange', close);
@@ -128,7 +159,7 @@ function mnavHTML() {
       <nav class="mnav__legal" aria-label="Legal"><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/shipping">Shipping</a><a href="#/returns">Returns</a></nav>
     </div>
     <div class="mnav__panel" data-mpanel="cats" ${mnavTab === 'cats' ? '' : 'hidden'}>
-      <div class="mnav__cats">${CATEGORIES.map((c) => `<a class="mnav__cat" href="#/shop?cat=${c.id}"><span class="photo"><img src="${u(c.img, 240)}" alt="" loading="lazy"></span><span><b>${c.name}</b><small>${catCount(c.id)} items · from ${money(catFrom(c.id))}</small></span>${ICON.arrow}</a>`).join('')}</div>
+      <div class="mnav__tiles">${CATEGORIES.map((c, k) => `<a class="mnav__tile" href="#/shop?cat=${c.id}" style="--i:${k}"><span class="photo"><img src="${u(c.img, 360)}" alt="" loading="lazy"></span><span class="mnav__tile-body"><b>${c.name}</b><small>${catCount(c.id)} items · from ${money(catFrom(c.id)).replace(/\.00$/, '')}</small></span></a>`).join('')}</div>
       <a class="mnav__special" href="#/home/specials"><span class="tag tag--gingham">Crazy Specials</span><b>${sp.length} specials this week</b><small>Ends Sunday 6:30 PM</small>${ICON.arrow}</a>
       <a class="btn btn--block" href="#/shop">Shop all ${PRODUCTS.length} products ${ICON.arrow}</a>
     </div>
