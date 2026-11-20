@@ -2,8 +2,9 @@
    STORE · cart, wishlist, users, orders, weekly boxes
    Everything persists in localStorage (demo back end).
    ===================================================================== */
-import { productById, linePrice } from '../data/products.js';
-import { DELIVERY } from '../config/site.js';
+import { productById, linePrice, PRODUCTS } from '../data/products.js';
+import { DELIVERY, BRANCHES, REWARDS, findZone } from '../config/site.js';
+import { DEFAULT_STOCK } from '../data/features.js';
 
 const KEY = 'iqbals.v1';
 const listeners = new Set();
@@ -17,6 +18,11 @@ const blank = () => ({
   boxes: [], // weekly subscriptions
   requests: [], // cut-to-order requests
   newsletter: [],
+  branch: 'benoni', // branch the customer is shopping at (stock + collection)
+  overrides: { products: {}, stock: {}, hours: {} }, // edits made on the Admin page
+  alerts: [], // { id, user, created } special / back-in-stock alerts
+  redemptions: [], // { user, points, created, order }
+  games: [], // { user, score, points, created }
 });
 
 function load() {
@@ -29,6 +35,46 @@ function load() {
 }
 
 export const state = load();
+
+/* ---------------- ADMIN OVERRIDES (prices, specials, hours) ---------------- */
+const BASE = new Map(PRODUCTS.map((p) => [p.id, { price: p.price, special: p.special ? { ...p.special } : null }]));
+const BASE_HOURS = new Map(BRANCHES.map((b) => [b.id, JSON.parse(JSON.stringify(b.hours))]));
+export function applyOverrides() {
+  PRODUCTS.forEach((p) => {
+    const base = BASE.get(p.id), o = state.overrides.products[p.id] || {};
+    p.price = o.price ?? base.price;
+    const sp = 'special' in o ? o.special : base.special?.price ?? null;
+    if (sp) p.special = { price: sp }; else delete p.special;
+  });
+  BRANCHES.forEach((b) => { b.hours = state.overrides.hours[b.id] || JSON.parse(JSON.stringify(BASE_HOURS.get(b.id))); });
+}
+applyOverrides();
+export function setProductOverride(id, patch) {
+  state.overrides.products[id] = { ...(state.overrides.products[id] || {}), ...patch };
+  applyOverrides();
+  save();
+}
+export function setStock(id, branch, level) {
+  state.overrides.stock[id] = { ...(state.overrides.stock[id] || {}), [branch]: level };
+  save();
+}
+export function setHours(branchId, hours) {
+  state.overrides.hours[branchId] = hours;
+  applyOverrides();
+  save();
+}
+export function resetOverrides() {
+  state.overrides = { products: {}, stock: {}, hours: {} };
+  applyOverrides();
+  save();
+}
+
+/* ---------------- STOCK & BRANCH ---------------- */
+export const stockOf = (id, branch = state.branch) => state.overrides.stock[id]?.[branch] ?? DEFAULT_STOCK[id]?.[branch] ?? 'in';
+export function setBranch(b) {
+  state.branch = b;
+  save();
+}
 
 function save() {
   try {
@@ -49,7 +95,7 @@ const lineKey = (id, weight, prep, notes) => [id, weight, prep || '', notes || '
 
 export function addToCart(id, { weight = 1, prep = '', notes = '', qty = 1 } = {}) {
   const p = productById(id);
-  if (!p) return null;
+  if (!p || stockOf(id) === 'out') return null;
   const w = p.unit === 'kg' ? Number(weight) : 1;
   const key = lineKey(id, w, prep, notes);
   const existing = state.cart.find((l) => l.key === key);
@@ -85,9 +131,11 @@ export function cartLines() {
 
 export const cartCount = () => state.cart.reduce((n, l) => n + l.qty, 0);
 export const cartSubtotal = () => cartLines().reduce((s, l) => s + l.total, 0);
-export function deliveryFee(subtotal = cartSubtotal(), method = 'delivery') {
+export function deliveryFee(subtotal = cartSubtotal(), method = 'delivery', area = '') {
   if (method !== 'delivery' || subtotal === 0) return 0;
-  return subtotal >= DELIVERY.freeThreshold ? 0 : DELIVERY.fee;
+  if (subtotal >= DELIVERY.freeThreshold) return 0;
+  const z = findZone(area || currentUser()?.address || '');
+  return z ? z.fee : DELIVERY.fee;
 }
 
 /* ---------------- WISHLIST ---------------- */
@@ -131,6 +179,7 @@ export async function register({ name, email, cell, password, address, branch })
   };
   state.users.push(user);
   state.session = user.id;
+  state.alerts.forEach((a) => a.user === 'guest' && (a.user = user.id)); // keep alerts set before signing in
   save();
   return user;
 }
@@ -139,6 +188,7 @@ export async function login(email, password) {
   const user = state.users.find((u) => u.email === email.trim().toLowerCase());
   if (!user || user.passHash !== (await hash(password))) throw new Error('That email and password don’t match. Please try again.');
   state.session = user.id;
+  state.alerts.forEach((a) => a.user === 'guest' && (a.user = user.id)); // keep alerts set before signing in
   save();
   return user;
 }
@@ -162,7 +212,9 @@ export const COLLECT_STEPS = ['Received', 'Being Cut', 'Packed', 'Ready for Coll
 export function placeOrder(details) {
   const lines = cartLines();
   const subtotal = cartSubtotal();
-  const fee = deliveryFee(subtotal, details.method);
+  const fee = deliveryFee(subtotal, details.method, details.address);
+  const pointsUsed = Math.min(details.pointsUsed || 0, pointsBalance());
+  const discount = Math.round(pointsUsed * REWARDS.pointValue * 100) / 100;
   const order = {
     id: 'IQ' + Math.floor(100000 + Math.random() * 899999),
     created: Date.now(),
@@ -170,8 +222,11 @@ export function placeOrder(details) {
     lines: lines.map(({ id, weight, prep, notes, qty, total, product }) => ({ id, weight, prep, notes, qty, total, name: product.name, unit: product.unit })),
     subtotal,
     fee,
-    total: subtotal + fee,
     ...details,
+    pointsUsed,
+    discount,
+    total: subtotal + fee - discount,
+    pointsEarned: state.session ? Math.floor((subtotal - discount) * REWARDS.perRand) : 0,
   };
   state.orders.unshift(order);
   state.cart = [];
@@ -182,7 +237,7 @@ export function placeOrder(details) {
 /** Demo status: each order moves one step forward every 90 seconds. */
 export function orderStatus(order) {
   const steps = order.method === 'collect' ? COLLECT_STEPS : ORDER_STEPS;
-  const idx = Math.min(steps.length - 1, Math.floor((Date.now() - order.created) / 90000));
+  const idx = order.statusIdx != null ? order.statusIdx : Math.min(steps.length - 1, Math.floor((Date.now() - order.created) / 90000));
   return { steps, idx };
 }
 
@@ -222,3 +277,42 @@ export function subscribeNewsletter(email) {
   if (!state.newsletter.includes(email)) state.newsletter.push(email);
   save();
 }
+
+/* ---------------- ADMIN: order status ---------------- */
+export function setOrderStatus(id, idx) {
+  const o = findOrder(id);
+  if (o) o.statusIdx = idx;
+  save();
+}
+
+/* ---------------- REWARDS ---------------- */
+export function pointsEarnedTotal(user = state.session) {
+  if (!user) return 0;
+  return state.orders.filter((o) => o.user === user).reduce((s, o) => s + (o.pointsEarned || 0), 0) +
+    state.games.filter((g) => g.user === user).reduce((s, g) => s + g.points, 0);
+}
+export function pointsBalance(user = state.session) {
+  if (!user) return 0;
+  const used = state.orders.filter((o) => o.user === user).reduce((s, o) => s + (o.pointsUsed || 0), 0);
+  return Math.max(0, pointsEarnedTotal(user) - used);
+}
+export const tierFor = (lifetime) => [...REWARDS.tiers].reverse().find((t) => lifetime >= t.min) || REWARDS.tiers[0];
+export const pointsHistory = (user = state.session) => [
+  ...state.orders.filter((o) => o.user === user).flatMap((o) => [
+    o.pointsEarned ? { created: o.created, label: 'Order #' + o.id, points: o.pointsEarned } : null,
+    o.pointsUsed ? { created: o.created, label: 'Redeemed on #' + o.id, points: -o.pointsUsed } : null,
+  ]),
+  ...state.games.filter((g) => g.user === user).map((g) => ({ created: g.created, label: 'Braai Master game · ' + g.score + ' pts score', points: g.points })),
+].filter(Boolean).sort((a, b) => b.created - a.created);
+
+/* ---------------- ALERTS (special / back in stock) ---------------- */
+export const hasAlert = (id) => state.alerts.some((a) => a.id === id && a.user === (state.session || 'guest'));
+export function toggleAlert(id) {
+  const user = state.session || 'guest';
+  const i = state.alerts.findIndex((a) => a.id === id && a.user === user);
+  if (i >= 0) state.alerts.splice(i, 1);
+  else state.alerts.push({ id, user, created: Date.now() });
+  save();
+  return i < 0;
+}
+export const myAlerts = () => state.alerts.filter((a) => a.user === (state.session || 'guest'));

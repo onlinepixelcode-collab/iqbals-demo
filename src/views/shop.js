@@ -4,7 +4,8 @@ import { PRODUCTS, CATEGORIES, unitPrice } from '../data/products.js';
 import { $, $$, ICON, img, debounce } from '../lib/ui.js';
 import { gsap, setupTilt } from '../lib/motion.js';
 import { cardHTML } from '../components/product.js';
-import { state } from '../lib/store.js';
+import { state, setBranch } from '../lib/store.js';
+import { BRANCHES } from '../config/site.js';
 
 const PREPS = ['Cubed', 'Minced', 'Curry pieces', 'Washed & cut', 'Marinated', 'Steaks', 'Chops'];
 const MAXP = 500;
@@ -34,6 +35,7 @@ export function render(params, query) {
     <div>
       <div class="shop__bar">
         <div class="search">${ICON.search}<label class="sr" for="q">Search products</label><input class="input" id="q" type="search" placeholder="Search ribeye, rotis, wors…" autocomplete="off"></div>
+        <label class="branch-pick">${ICON.pin}<span>Shopping at</span><select id="branchPick" aria-label="Branch">${BRANCHES.map((b) => `<option value="${b.id}" ${state.branch === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}</select></label>
         <label class="sr" for="sort">Sort</label>
         <select class="select" id="sort"><option value="pop">Most popular</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="az">Name A–Z</option></select>
         <button class="btn btn--ghost btn--sm" id="fToggle" style="display:none">${ICON.filter} Filters</button>
@@ -114,6 +116,7 @@ export function mount(root, params, query) {
   });
   $('#fSpecial', root).addEventListener('change', (e) => { f.special = e.target.checked; apply(); });
   $('#sort', root).addEventListener('change', (e) => { f.sort = e.target.value; apply(); });
+  $('#branchPick', root).addEventListener('change', (e) => { setBranch(e.target.value); apply(); });
   q.addEventListener('input', debounce(() => { f.q = q.value; apply(); }, 120));
   $('#fReset', root).addEventListener('click', () => {
     Object.assign(f, { cat: '', q: '', max: MAXP, preps: [], special: false });

@@ -3,9 +3,9 @@ import { u } from '../config/site.js';
 import { productById, categoryById, unitPrice, linePrice } from '../data/products.js';
 import { RECIPES } from '../data/content.js';
 import { $, $$, ICON, money, esc, img, toast, flyToCart, weightLabel } from '../lib/ui.js';
-import { addToCart, toggleWish, isWished } from '../lib/store.js';
+import { addToCart, toggleWish, isWished, stockOf, hasAlert } from '../lib/store.js';
 import { setupTilt } from '../lib/motion.js';
-import { cardHTML, optionsHTML, bindOptions, perLabel, related } from '../components/product.js';
+import { cardHTML, optionsHTML, bindOptions, perLabel, related, branchName } from '../components/product.js';
 
 export function render(params) {
   const p = productById(params.id);
@@ -25,6 +25,7 @@ export function render(params) {
         <div style="display:flex;gap:8px;flex-wrap:wrap">${p.special ? '<span class="tag tag--gingham">Crazy Special</span>' : ''}<span class="tag tag--halaal">${ICON.shield.replace('<svg', '<svg style="width:14px"')} NIHT Halaal</span></div>
         <h1 data-split>${esc(p.name)}</h1>
         <p class="pcard__cut" style="font-size:15px">${esc(p.cut)}</p>
+        ${(() => { const st = stockOf(p.id); return `<span class="stock-pill stock-pill--${st}"><i></i>${st === 'out' ? 'Sold out' : st === 'low' ? 'Low stock' : 'In stock'} at ${branchName()}</span>`; })()}
         <div class="pd__price"><b>${money(unitPrice(p))}</b>${p.special ? `<s>${money(p.price)}</s>` : ''}<small>${perLabel(p)}</small></div>
         <p class="lead">${esc(p.desc)}</p>
         <div class="pd__facts">
@@ -37,8 +38,9 @@ export function render(params) {
           <div class="stepper"><button data-q="-1" aria-label="Decrease quantity">${ICON.minus}</button><output id="pdQty">1</output><button data-q="1" aria-label="Increase quantity">${ICON.plus}</button></div>
           <div class="total"><small>Total</small><b id="pdTotal"></b></div>
           <button class="icon-btn ${isWished(p.id) ? 'is-on' : ''}" id="pdWish" aria-label="Save to wishlist" aria-pressed="${isWished(p.id)}" style="border:1.5px solid var(--line)">${ICON.heart}</button>
-          <button class="btn magnetic" id="pdAdd">Add to cart ${ICON.arrow}</button>
+          ${stockOf(p.id) === 'out' ? `<button class="btn btn--dark ${hasAlert(p.id) ? 'is-on' : ''}" data-alert="${p.id}">${ICON.bell} Notify me when it’s back</button>` : `<button class="btn magnetic" id="pdAdd">Add to cart ${ICON.arrow}</button>`}
         </div>
+        ${!p.special && stockOf(p.id) !== 'out' ? `<button class="link-btn alert-link ${hasAlert(p.id) ? 'is-on' : ''}" data-alert="${p.id}" style="margin:-12px 0 26px;display:inline-flex;gap:8px;align-items:center">${ICON.bell.replace('<svg', '<svg style="width:18px"')} Alert me when this goes on special</button>` : ''}
         ${recipe ? `<div class="recipe-tip"><div class="photo">${img(recipe.img, 300, recipe.title)}</div><div><span class="label" style="color:var(--gold-hi)">Recipe idea</span><h4>${recipe.title}</h4><p style="margin:0 0 10px;font-size:16px;color:rgba(243,230,200,.85)">${recipe.blurb}</p><a class="add-mini" href="#/recipes?r=${recipe.id}">See recipe ${ICON.arrow}</a></div></div>` : ''}
       </div>
     </div>
@@ -71,7 +73,7 @@ export function mount(root, params) {
     })
   );
   $('#pdMain img', root).style.transition = 'opacity .3s, transform 1.2s';
-  $('#pdAdd', root).addEventListener('click', (e) => {
+  $('#pdAdd', root)?.addEventListener('click', (e) => {
     const notes = $('#pdNotes', root).value.trim();
     addToCart(p.id, { weight: sel.weight, prep: sel.prep, notes, qty: sel.qty });
     flyToCart(e.currentTarget, u(p.img, 200));

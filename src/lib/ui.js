@@ -59,6 +59,10 @@ export const ICON = {
   pause: i('<path d="M9 5v14M15 5v14"/>'),
   skip: i('<path d="M5 5l10 7-10 7V5ZM19 5v14"/>'),
   edit: i('<path d="M4 20h4L19 9l-4-4L4 16v4Z"/>'),
+  bell: i('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
+  gift: i('<rect x="3" y="8" width="18" height="13" rx="1"/><path d="M3 12h18M12 8v13M12 8S10 3 7.5 4.5 9 8 12 8Zm0 0s2-5 4.5-3.5S15 8 12 8Z"/>'),
+  game: i('<rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3M15 12h.01M18 13h.01"/>'),
+  moon: i('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/>'),
   trash: i('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
 };
 

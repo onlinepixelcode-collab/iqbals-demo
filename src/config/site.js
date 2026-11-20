@@ -67,16 +67,43 @@ export const BRANCHES = [
 /* ---------------------------------------------------------------------
    DELIVERY & ORDERING
    --------------------------------------------------------------------- */
+/* Delivery zones: which branch serves each area and what it costs.
+   fee applies below freeThreshold; nextDay = earliest delivery is the next trading day. */
+const ZONES = [
+  { name: 'Actonville', branch: 'benoni', fee: 35 }, { name: 'Benoni', branch: 'benoni', fee: 45 },
+  { name: 'Daveyton', branch: 'benoni', fee: 65 }, { name: 'Boksburg', branch: 'benoni', fee: 55 },
+  { name: 'Brakpan', branch: 'benoni', fee: 65 }, { name: 'Springs', branch: 'benoni', fee: 75 },
+  { name: 'Kempton Park', branch: 'benoni', fee: 85 }, { name: 'Germiston', branch: 'benoni', fee: 75 },
+  { name: 'Lenasia', branch: 'lenasia', fee: 35 }, { name: 'Lenasia South', branch: 'lenasia', fee: 45 },
+  { name: 'Ennerdale', branch: 'lenasia', fee: 60 }, { name: 'Eldorado Park', branch: 'lenasia', fee: 55 },
+  { name: 'Soweto', branch: 'lenasia', fee: 65 }, { name: 'Johannesburg South', branch: 'lenasia', fee: 75 },
+  { name: 'Mayfair', branch: 'lenasia', fee: 85 }, { name: 'Fordsburg', branch: 'lenasia', fee: 85 },
+  { name: 'Roodepoort', branch: 'lenasia', fee: 95 },
+];
+
 export const DELIVERY = {
   freeThreshold: 750, // free delivery from this cart total (ZAR)
-  fee: 65,
-  areas: [
-    'Benoni', 'Actonville', 'Daveyton', 'Boksburg', 'Brakpan', 'Kempton Park',
-    'Germiston', 'Springs', 'Lenasia', 'Lenasia South', 'Ennerdale', 'Eldorado Park',
-    'Soweto', 'Roodepoort', 'Johannesburg South', 'Mayfair', 'Fordsburg',
-  ],
+  fee: 65, // default when the area is unknown
+  zones: ZONES,
+  areas: ZONES.map((z) => z.name),
   slots: ['08:30 – 10:30', '10:30 – 12:30', '12:30 – 14:30', '14:30 – 16:30', '16:30 – 18:30'],
   boxDays: ['Wednesday', 'Thursday', 'Friday', 'Saturday'],
+};
+export const findZone = (area = '') => {
+  const q = area.trim().toLowerCase();
+  if (!q) return null;
+  return ZONES.find((z) => z.name.toLowerCase() === q) || ZONES.find((z) => q.includes(z.name.toLowerCase())) || null;
+};
+
+/* Iqbal's Rewards: 1 point per R10 spent; 100 points = R10 off (max 50% of an order). */
+export const REWARDS = { perRand: 0.1, pointValue: 0.1, maxShare: 0.5, gameMax: 150,
+  tiers: [{ name: 'Bronze', min: 0 }, { name: 'Silver', min: 1000 }, { name: 'Gold', min: 3000 }] };
+
+/* Seasonal pre-orders (edit dates every year) */
+export const SEASONAL = {
+  eidLabel: 'Eid al-Adha',
+  eidDate: '2027-05-16', // expected date (moon sighting); pre-orders close 7 days before
+  ramadanLabel: 'Ramadan iftaar packs',
 };
 
 /* Weekly "crazy specials" end this weekday/time (Sunday 18:30). */

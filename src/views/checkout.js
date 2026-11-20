@@ -1,7 +1,9 @@
 /* CHECKOUT · delivery / collection, date + slot, payment (demo) */
-import { BRANCHES, DELIVERY, u } from '../config/site.js';
+import { BRANCHES, DELIVERY, REWARDS, findZone, u } from '../config/site.js';
 import { $, $$, ICON, money, esc, weightLabel, toast, confetti } from '../lib/ui.js';
-import { cartLines, cartSubtotal, deliveryFee, currentUser, placeOrder, findOrder, orderStatus } from '../lib/store.js';
+import { cartLines, cartSubtotal, deliveryFee, currentUser, placeOrder, findOrder, orderStatus, pointsBalance, state } from '../lib/store.js';
+
+const usablePoints = () => Math.min(pointsBalance(), Math.floor((cartSubtotal() * REWARDS.maxShare) / REWARDS.pointValue));
 import { processPayment, luhn } from '../lib/payments.js';
 import { navigate } from '../router.js';
 import { scrollTo } from '../lib/motion.js';
@@ -52,6 +54,7 @@ export function render() {
             <input class="input" id="coAddr" autocomplete="street-address" placeholder="Street, suburb" value="${esc(user?.address || '')}"><span class="field__err"></span></div>
           <div class="field"><label for="coNotes">Notes for the butcher</label><textarea class="textarea" id="coNotes" placeholder="Anything we should know? e.g. call on arrival, extra trim on the chops"></textarea></div>
         </div>
+        ${usablePoints() > 0 ? `<label class="check card-box rw-use"><input type="checkbox" id="coPts"> <span>Use <b>${usablePoints()} Rewards points</b> for <b>${money(usablePoints() * REWARDS.pointValue)} off</b> this order</span></label>` : ''}
         <button class="btn btn--block magnetic" type="submit">Continue to payment ${ICON.arrow}</button>
       </form>
       <div id="payStep" hidden></div>
@@ -71,15 +74,19 @@ function nextOpen() {
   return tomorrow();
 }
 
-function summaryHTML(method) {
+function summaryHTML(method, area = '', usePts = false) {
   const lines = cartLines();
   const sub = cartSubtotal();
-  const fee = deliveryFee(sub, method);
+  const fee = deliveryFee(sub, method, area);
+  const pts = usePts ? usablePoints() : 0;
+  const disc = pts * REWARDS.pointValue;
   return `<h3>Order summary</h3>
     ${lines.map((l) => `<div class="sline"><span>${l.qty} × ${esc(l.product.name)}<br><small style="color:var(--text-dark-dim)">${[l.product.unit === 'kg' ? weightLabel(l.weight) : '', l.prep].filter(Boolean).join(' · ')}</small></span><b>${money(l.total)}</b></div>`).join('')}
     <div class="sumrow" style="margin-top:14px"><span>Subtotal</span><b>${money(sub)}</b></div>
-    <div class="sumrow" style="margin:8px 0 14px"><span>${method === 'collect' ? 'Collection' : 'Delivery'}</span><b>${fee ? money(fee) : 'Free'}</b></div>
-    <div class="sumrow is-total"><span>Total</span><b>${money(sub + fee)}</b></div>`;
+    <div class="sumrow" style="margin:8px 0 ${disc ? 6 : 14}px"><span>${method === 'collect' ? 'Collection' : 'Delivery'}${method === 'delivery' && findZone(area) ? ' · ' + findZone(area).name : ''}</span><b>${fee ? money(fee) : 'Free'}</b></div>
+    ${disc ? `<div class="sumrow" style="margin:0 0 14px;color:#2f7348"><span>Rewards (${pts} pts)</span><b>− ${money(disc)}</b></div>` : ''}
+    <div class="sumrow is-total"><span>Total</span><b>${money(sub + fee - disc)}</b></div>
+    ${state.session ? `<p class="muted" style="font-size:14px;margin:12px 0 0">You’ll earn <b>${Math.floor((sub - disc) * REWARDS.perRand)} points</b> on this order.</p>` : ''}`;
 }
 
 export function mount(root) {
@@ -88,7 +95,7 @@ export function mount(root) {
   const st = { method: 'delivery', slot: DELIVERY.slots[1] };
   const summary = $('#summary', root);
   const refresh = () => {
-    summary.innerHTML = summaryHTML(st.method);
+    summary.innerHTML = summaryHTML(st.method, $('#coAddr', root)?.value || '', !!$('#coPts', root)?.checked);
     $('#addrField', root).hidden = st.method !== 'delivery';
   };
   refresh();
@@ -97,7 +104,10 @@ export function mount(root) {
     st.slot = b.dataset.slot;
     $$('[data-slot]', root).forEach((x) => { x.classList.toggle('is-on', x === b); x.setAttribute('aria-checked', x === b); });
   }));
-  $('#coAddrPick', root)?.addEventListener('change', (e) => ($('#coAddr', root).value = e.target.value));
+  $('#coAddrPick', root)?.addEventListener('change', (e) => { $('#coAddr', root).value = e.target.value; refresh(); });
+  $('#coAddr', root)?.addEventListener('change', refresh);
+  $('#coPts', root)?.addEventListener('change', refresh);
+  const br = $('#coBranch', root); if (br && !currentUser()?.branch) br.value = state.branch;
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -125,6 +135,7 @@ export function mount(root) {
     const details = {
       method: st.method, branch: v('coBranch'), date, slot: st.slot, name: v('coName'), cell: v('coCell'), email: v('coEmail'),
       address: st.method === 'delivery' ? v('coAddr') : '', notes: v('coNotes'),
+      pointsUsed: $('#coPts', root)?.checked ? usablePoints() : 0,
     };
     showPayment(root, details);
   });
@@ -132,7 +143,7 @@ export function mount(root) {
 
 function showPayment(root, details) {
   const sub = cartSubtotal();
-  const total = sub + deliveryFee(sub, details.method);
+  const total = sub + deliveryFee(sub, details.method, details.address) - details.pointsUsed * REWARDS.pointValue;
   $('#coForm', root).hidden = true;
   $$('[data-stepper]', root).forEach((s) => {
     s.classList.toggle('is-on', s.dataset.stepper === '2');
@@ -229,7 +240,7 @@ export function renderSuccess(params) {
     <h1 class="h-lg">Your order is in.</h1>
     <div class="ordno">#${o.id}</div>
     <p class="lead" style="margin:0 auto 10px">${o.method === 'delivery' ? `We’ll deliver to <b>${esc(o.address)}</b>` : `Collect from <b>Iqbal’s ${b.name}</b>, ${b.address}`} on <b>${new Date(o.date + 'T12:00').toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long' })}</b>, ${o.slot}.</p>
-    <p class="muted">Total ${money(o.total)} · ${o.payment === 'cash' ? 'Pay on ' + (o.method === 'collect' ? 'collection' : 'delivery') : `Paid (test ref ${o.paymentRef})`}</p>
+    <p class="muted">Total ${money(o.total)}${o.pointsEarned ? ` · +${o.pointsEarned} Rewards points` : ''} · ${o.payment === 'cash' ? 'Pay on ' + (o.method === 'collect' ? 'collection' : 'delivery') : `Paid (test ref ${o.paymentRef})`}</p>
     <div class="timeline" style="margin:40px 0">${steps.map((s, i) => `<div class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-now' : ''}">${s}</div>`).join('')}</div>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <a class="btn" href="#/account">Track my order ${ICON.arrow}</a>

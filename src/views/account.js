@@ -2,7 +2,8 @@
 import { BRANCHES, IMG, u } from '../config/site.js';
 import { BOXES } from '../data/content.js';
 import { $, $$, ICON, money, esc, img, toast, weightLabel } from '../lib/ui.js';
-import { register, login, logout, currentUser, updateUser, userOrders, orderStatus, reorder, userBoxes, updateBox, addToCart, state } from '../lib/store.js';
+import { register, login, logout, currentUser, updateUser, userOrders, orderStatus, reorder, userBoxes, updateBox, addToCart, state, pointsBalance, pointsEarnedTotal, tierFor, pointsHistory, myAlerts, toggleAlert, stockOf } from '../lib/store.js';
+import { REWARDS } from '../config/site.js';
 import { PRODUCTS, productById, unitPrice } from '../data/products.js';
 import { cardHTML } from '../components/product.js';
 import { setupTilt } from '../lib/motion.js';
@@ -79,6 +80,8 @@ const TABS = [
   ['orders', 'Order history', ICON.box],
   ['again', 'Buy again', ICON.cart],
   ['sales', 'Sales & specials', ICON.flame],
+  ['rewards', 'Rewards', ICON.gift],
+  ['alerts', 'My alerts', ICON.bell],
   ['boxes', 'Weekly Box', ICON.calendar],
   ['profile', 'Profile', ICON.user],
   ['addresses', 'Addresses', ICON.pin],
@@ -102,12 +105,13 @@ export function mountAccount(root, params, query) {
   const show = (t) => {
     tab = t;
     $$('[data-tab]', root).forEach((b) => b.classList.toggle('is-on', b.dataset.tab === t));
-    el.innerHTML = { overview: overviewTab, orders: ordersTab, again: againTab, sales: salesTab, boxes: boxesTab, profile: profileTab, addresses: addressTab }[t]();
+    el.innerHTML = { overview: overviewTab, orders: ordersTab, again: againTab, sales: salesTab, rewards: rewardsTab, alerts: alertsTab, boxes: boxesTab, profile: profileTab, addresses: addressTab }[t]();
     $$('[data-goto]', el).forEach((b) => b.addEventListener('click', () => show(b.dataset.goto)));
     $$('[data-reorder]', el).forEach((b) => b.addEventListener('click', () => { const n = reorder(b.dataset.reorder); toast(`${n} item${n === 1 ? '' : 's'} added to your cart`); openCart(); }));
     $$('[data-again]', el).forEach((b) => b.addEventListener('click', () => { const [id, w, prep] = JSON.parse(b.dataset.again); addToCart(id, { weight: w, prep }); toast(`${productById(id).name} added to your cart`); }));
     $$('[data-again-all]', el).forEach((b) => b.addEventListener('click', () => { const items = buyAgainItems(); items.forEach((i) => addToCart(i.id, { weight: i.weight, prep: i.prep })); toast(`Your usual ${items.length} items are in your cart`); openCart(); }));
     setupTilt(el, '.pcard');
+    $$('[data-unalert]', el).forEach((b) => b.addEventListener('click', () => { toggleAlert(b.dataset.unalert); show('alerts'); }));
     bind[t]?.();
   };
   const bind = {
@@ -259,7 +263,7 @@ function overviewTab() {
       <div class="mb-stat"><b>${orders.length}</b><span>Orders placed</span></div>
       <div class="mb-stat"><b>${money(spent)}</b><span>Total spent</span></div>
       <div class="mb-stat"><b>${box ? box.status === 'paused' ? 'Paused' : 'Active' : 'None'}</b><span>Weekly Box</span></div>
-      <div class="mb-stat"><b>${state.wishlist.length}</b><span>Favourites</span></div>
+      <div class="mb-stat"><b>${pointsBalance()}</b><span>Rewards points · <a href="#/account?tab=rewards" data-goto="rewards" style="color:#9b1515">${tierFor(pointsEarnedTotal()).name}</a></span></div>
     </div>
     ${last ? (() => { const { steps, idx } = orderStatus(last); return `<article class="order"><div class="order__head"><div><span class="label">Latest order</span><br><b>#${last.id}</b> <span class="muted" style="font-size:15px">· ${last.lines.length} items · ${money(last.total)}</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn--sm" data-reorder="${last.id}">Re-order this ${ICON.arrow}</button><button class="btn btn--sm btn--ghost" data-goto="orders">All orders</button></div></div>
@@ -292,4 +296,27 @@ function salesTab() {
       <div class="mb-deal">${ICON.box}<div><b>Weekly Box: save 5%</b><small>Custom boxes are 5% off counter prices</small></div></div>
     </div>
     <div class="grid" style="margin-top:26px">${sp.map(cardHTML).join('')}</div>`;
+}
+
+function rewardsTab() {
+  const bal = pointsBalance(), life = pointsEarnedTotal(), tier = tierFor(life);
+  const next = REWARDS.tiers.find((t) => t.min > life);
+  const hist = pointsHistory();
+  return `<div class="rw-card"><div><span class="label">${tier.name} member</span><h2 class="h-lg" style="margin:6px 0">${bal} points</h2><p style="margin:0">Worth ${money(bal * REWARDS.pointValue)} off. Use them at checkout.</p></div>
+      <div>${next ? `<p style="margin:0 0 8px">${next.min - life} points to ${next.name}</p><div class="ship-bar" style="height:12px;width:240px;background:rgba(255,255,255,.2)"><span style="width:${(life / next.min) * 100}%"></span></div>` : '<p style="margin:0">Top tier reached. Shukran! ⭐</p>'}</div></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 30px"><a class="btn" href="#/shop">Shop &amp; earn ${ICON.arrow}</a><a class="btn btn--ghost" href="#/game">${ICON.game} Play Braai Master for bonus points</a><a class="btn btn--ghost" href="#/rewards">How it works</a></div>
+    <h3 class="h-sm" style="margin-bottom:14px">Points history</h3>
+    ${hist.length ? `<div class="again">${hist.map((h) => `<div class="again__row" style="grid-template-columns:1fr auto"><div><b style="font-size:18px">${esc(h.label)}</b><small>${new Date(h.created).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div><b style="color:${h.points > 0 ? '#2f7348' : '#9b1515'}">${h.points > 0 ? '+' : ''}${h.points}</b></div>`).join('')}</div>` : '<p class="muted">No points yet. Your first order earns 1 point per R10.</p>'}`;
+}
+
+function alertsTab() {
+  const list = myAlerts().map((a) => productById(a.id)).filter(Boolean);
+  if (!list.length) return `<div class="empty"><h3>No alerts yet</h3><p>Tap the bell on any sold-out cut, or “Alert me when this goes on special” on a product page, and we’ll flag it here.</p><a class="btn" href="#/shop">Browse the shop</a></div>`;
+  const ready = list.filter((p) => p.special || stockOf(p.id) !== 'out');
+  return `<h2 class="h-md" style="margin-bottom:8px">My alerts</h2><p class="muted" style="margin:0 0 22px">${ready.length ? `<b style="color:#2f7348">${ready.length} good news:</b> on special or back in stock now.` : 'We’ll let you know the moment these are on special or back in stock.'}</p>
+    <div class="again">${list.map((p) => { const st = stockOf(p.id); const good = p.special ? 'On special now!' : st !== 'out' ? 'In stock' : 'Still sold out'; return `<div class="again__row">
+      <a class="photo" href="#/product/${p.id}">${img(p.img, 200, p.name)}</a>
+      <div><b>${esc(p.name)}</b><small style="color:${p.special ? '#2f7348' : st === 'out' ? '#9b1515' : 'inherit'};font-weight:700">${good}</small></div>
+      <div class="again__price"><b>${money(unitPrice(p))}</b><small>${p.unit === 'kg' ? '/ kg' : 'each'}</small></div>
+      <div style="display:flex;gap:8px">${st !== 'out' ? `<button class="btn btn--sm" data-add="${p.id}">${ICON.plus} Add</button>` : ''}<button class="btn btn--sm btn--ghost" data-unalert="${p.id}">Remove</button></div></div>`; }).join('')}</div>`;
 }

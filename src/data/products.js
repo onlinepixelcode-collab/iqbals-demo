@@ -98,6 +98,11 @@ export const PRODUCTS = [
   { id: 'pastries', name: 'Butter Croissants', category: 'bakery', cut: 'Pack of 4', unit: 'each', price: 64, preps: [], img: IMG.pastry, gallery: [IMG.bakery], desc: 'Baked every morning. Flaky, buttery layers.', best: 'Breakfast', tags: [] },
   { id: 'naan', name: 'Garlic Naan', category: 'bakery', cut: 'Pack of 4', unit: 'each', price: 48, preps: [], img: IMG.naan, gallery: [IMG.flatbread], desc: 'Soft tandoor-style naan brushed with garlic butter.', best: 'With curry', tags: [] },
 
+  /* ---------------- RAMADAN / IFTAAR PACKS ---------------- */
+  { id: 'iftaar-family', name: 'Iftaar Family Pack', category: 'bakery', cut: '12 samosas · 6 pies · 10 rotis', unit: 'each', price: 395, preps: ['Frozen', 'Freshly fried / baked'], img: IMG.samosa2, gallery: [IMG.pastry, IMG.roti], desc: 'Everything for the table at sunset: mixed samosas, chicken and mince pies, and a pack of our famous rotis.', best: 'Iftaar for 4–6', tags: ['ramadan'] },
+  { id: 'samosa-platter', name: 'Samosa Platter (50)', category: 'bakery', cut: '25 mince · 25 chicken', unit: 'each', price: 235, preps: ['Frozen', 'Freshly fried'], img: IMG.samosa, gallery: [IMG.samosa2], desc: 'Party-sized platter of crisp pur-pastry samosas. Order frozen and fry at home in 4 minutes.', best: 'Iftaar, functions', tags: ['ramadan', 'popular'] },
+  { id: 'roti-bulk', name: 'Rotis · Bulk (50)', category: 'bakery', cut: '5 × packs of 10', unit: 'each', price: 295, preps: [], img: IMG.rotiTray, gallery: [IMG.roti], desc: 'Stock the freezer for the month. Soft, flaky and buttery, and they reheat like they were just made.', best: 'Ramadan freezer stock', tags: ['ramadan'] },
+
   /* ---------------- MARINADES & SPICES ---------------- */
   { id: 'peri-marinade', name: 'Peri-Peri Marinade', category: 'spices', cut: '500 ml', unit: 'each', price: 45, preps: [], img: IMG.sauce, gallery: [IMG.spices2], desc: 'Bird’s-eye chilli, garlic and lemon. Hot, tangy and addictive.', best: 'Chicken, prawns', tags: [] },
   { id: 'lemon-herb', name: 'Lemon & Herb Marinade', category: 'spices', cut: '500 ml', unit: 'each', price: 45, preps: [], img: IMG.sauce, gallery: [IMG.spiceBowls], desc: 'Fresh, zesty and mild. Perfect on lamb and chicken.', best: 'Lamb, chicken', tags: [] },

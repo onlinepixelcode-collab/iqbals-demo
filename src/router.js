@@ -14,6 +14,8 @@ import * as Checkout from './views/checkout.js';
 import * as Account from './views/account.js';
 import * as Extras from './views/extras.js';
 import * as Contact from './views/contact.js';
+import * as F from './views/features.js';
+import * as Admin from './views/admin.js';
 
 const TITLE = "Iqbal's Meat & Deli";
 const ROUTES = [
@@ -31,6 +33,12 @@ const ROUTES = [
   { path: 'recipes', nav: 'recipes', title: `Recipes · ${TITLE}`, view: { render: Extras.renderRecipes, mount: Extras.mountRecipes } },
   { path: 'guide', nav: 'guide', title: `Cooking guide · ${TITLE}`, view: { render: Extras.renderGuide, mount: Extras.mountGuide } },
   { path: 'contact', nav: 'contact', title: `Contact · ${TITLE}`, view: Contact },
+  { path: 'eid', nav: 'eid', title: `Eid & Ramadan pre-orders · ${TITLE}`, view: { render: F.renderEid, mount: F.mountEid } },
+  { path: 'functions', nav: 'more', title: `Functions & catering · ${TITLE}`, view: { render: F.renderFunctions, mount: F.mountFunctions } },
+  { path: 'delivery', nav: 'more', title: `Delivery areas · ${TITLE}`, view: { render: F.renderDelivery, mount: F.mountDelivery } },
+  { path: 'meal-planner', nav: 'more', title: `Meal planner · ${TITLE}`, view: { render: F.renderPlanner, mount: F.mountPlanner } },
+  { path: 'rewards', nav: 'more', title: `Iqbal’s Rewards · ${TITLE}`, view: { render: F.renderRewards } },
+  { path: 'admin', nav: '', title: `Shop admin · ${TITLE}`, view: Admin },
   { path: 'cut-to-order', nav: 'guide', title: `Cut to order · ${TITLE}`, view: { render: Extras.renderCut, mount: Extras.mountCut } },
 ];
 

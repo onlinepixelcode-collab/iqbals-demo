@@ -95,7 +95,7 @@ const INTENTS = [
   {
     id: 'delivery',
     words: ['deliver', 'delivery', 'shipping', 'courier', 'area', 'boksburg', 'collect', 'collection', 'pick up', 'pickup'],
-    reply: () => ({ text: `<p>We deliver Wednesday to Sunday in slots from 8:30 AM to 6:30 PM. Delivery is <b>${money(DELIVERY.fee)}</b>, or <b>free over ${money(DELIVERY.freeThreshold)}</b>. Collection from either branch is always free.</p><p>Areas: ${DELIVERY.areas.join(', ')}.</p>`, links: [{ label: 'Start shopping', href: '#/shop' }] }),
+    reply: () => ({ text: `<p>We deliver Wednesday to Sunday in slots from 8:30 AM to 6:30 PM. Fees depend on your area (from ${money(Math.min(...DELIVERY.zones.map((z) => z.fee)))}), and delivery is <b>free over ${money(DELIVERY.freeThreshold)}</b>. Collection from either branch is always free.</p><p>Areas: ${DELIVERY.areas.join(', ')}.</p>`, links: [{ label: 'Check my area & fee', href: '#/delivery' }] }),
   },
   {
     id: 'halaal',
@@ -126,6 +126,26 @@ const INTENTS = [
     id: 'competition',
     words: ['competition', 'giveaway', 'win', 'prize', 'draw'],
     reply: () => ({ text: `<p><b>${COMPETITION.title}</b>: ${COMPETITION.text}</p>`, links: [{ label: 'Follow @_iqbals_', href: BUSINESS.instagram }] }),
+  },
+  {
+    id: 'eid',
+    words: ['eid', 'qurbani', 'qurbaani', 'udhiyah', 'sacrifice', 'ramadan', 'ramadaan', 'iftaar', 'iftar', 'sehri'],
+    reply: () => ({ text: '<p><b>Qurbani bookings</b> for Eid al-Adha are open online: sheep, goat, a 1/7 cow share or a whole cow, slaughtered, cleaned and cut how you like. A deposit secures your booking.</p><p>For <b>Ramadan</b> we have iftaar family packs, samosa platters and bulk rotis for the freezer.</p>', products: ['iftaar-family', 'samosa-platter', 'roti-bulk'], links: [{ label: 'Book Qurbani & iftaar packs', href: '#/eid' }] }),
+  },
+  {
+    id: 'rewards',
+    words: ['points', 'rewards', 'loyalty', 'reward'],
+    reply: () => ({ text: '<p><b>Iqbal’s Rewards:</b> earn 1 point per R10 spent online. 100 points = R10 off, up to half of an order. You can also earn bonus points playing Braai Master.</p>', links: [{ label: 'How Rewards work', href: '#/rewards' }] }),
+  },
+  {
+    id: 'functions',
+    words: ['wedding', 'walima', 'function', 'catering', 'event', 'party', 'bulk', 'aqiqah', 'jumuah'],
+    reply: () => ({ text: '<p>Feeding a crowd? Our <b>functions calculator</b> works out the kilos for braai, curry, biryani or a mixed buffet, with a function discount of 5–12%. Then we send a proper quote.</p>', links: [{ label: 'Get a function quote', href: '#/functions' }] }),
+  },
+  {
+    id: 'planner',
+    words: ['meal plan', 'meal planner', 'plan the week', 'weekly menu', 'dinner ideas', 'what to cook'],
+    reply: () => ({ text: '<p>Try the <b>meal planner</b>: pick a dinner for each night and how many you’re feeding, and we build one shopping list with the right kilos.</p>', links: [{ label: 'Open the meal planner', href: '#/meal-planner' }] }),
   },
   {
     id: 'thanks',

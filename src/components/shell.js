@@ -5,12 +5,20 @@ import { state, subscribe, cartLines, cartCount, cartSubtotal, setQty, removeLin
 import { logoWide, halaalSeal } from './brand.js';
 import { stopScroll, startScroll } from '../lib/motion.js';
 
+const MORE = [
+  ['#/guide', 'Cooking guide', 'Doneness & temperatures'],
+  ['#/meal-planner', 'Meal planner', 'Plan the week, one shopping list'],
+  ['#/functions', 'Functions & catering', 'Quotes for weddings & big braais'],
+  ['#/delivery', 'Delivery areas', 'Check your fee & next slot'],
+  ['#/rewards', 'Iqbal’s Rewards', 'Earn points on every order'],
+  ['#/cut-to-order', 'Cut to order', 'Special cuts on request'],
+];
 const LINKS = [
   ['#/', 'Home', ''],
   ['#/shop', 'Shop', 'shop'],
   ['#/weekly-box', 'Weekly Box', 'weekly-box'],
+  ['#/eid', 'Eid & Ramadan', 'eid'],
   ['#/recipes', 'Recipes', 'recipes'],
-  ['#/guide', 'Cooking Guide', 'guide'],
   ['#/contact', 'Contact', 'contact'],
 ];
 
@@ -19,7 +27,9 @@ export function renderHeader() {
   header.innerHTML = `
     <div class="nav">
       <a class="nav__brand" href="#/" aria-label="Iqbal's Meat & Deli home">${logoWide({ h: 50 })}</a>
-      <nav class="nav__links" aria-label="Main">${LINKS.map(([h, l, k]) => `<a href="${h}" data-nav="${k}">${l}</a>`).join('')}</nav>
+      <nav class="nav__links" aria-label="Main">${LINKS.map(([h, l, k]) => `<a href="${h}" data-nav="${k}">${l}</a>`).join('')}
+        <div class="nav__more"><button class="nav__more-btn" data-nav="more" aria-expanded="false" aria-haspopup="true">More <span aria-hidden="true">▾</span></button>
+          <div class="nav__drop" role="menu">${MORE.map(([h, l, d]) => `<a href="${h}" role="menuitem"><b>${l}</b><small>${d}</small></a>`).join('')}</div></div></nav>
       <div class="nav__actions">
         <a class="icon-btn hide-sm" href="#/shop?focus=search" aria-label="Search products" data-cursor="hover">${ICON.search}</a>
         <a class="icon-btn hide-sm" href="#/wishlist" aria-label="Wishlist">${ICON.heart}<span class="badge-count" data-wish-count></span></a>
@@ -30,13 +40,17 @@ export function renderHeader() {
     </div>
     <div class="mnav" id="mnav" data-lenis-prevent>
       ${LINKS.map(([h, l]) => `<a href="${h}">${l}</a>`).join('')}
-      <a href="#/cut-to-order">Cut to Order</a>
+      ${MORE.map(([h, l]) => `<a href="${h}" class="mnav__sm">${l}</a>`).join('')}
       <a href="#/account">My Butcher</a>
       <a href="#/login">Sign in</a>
       <a href="#/register">Register</a>
       <p class="mnav__meta">${BRANCHES.map((b) => `${b.name}: <a href="tel:${b.phone.replace(/\s/g, '')}" style="font:inherit;color:var(--gold-hi)">${b.phone}</a>`).join(' · ')}</p>
     </div>`;
 
+  const more = $('.nav__more', header);
+  const moreBtn = $('.nav__more-btn', header);
+  moreBtn.addEventListener('click', (e) => { e.stopPropagation(); const o = !more.classList.contains('is-open'); more.classList.toggle('is-open', o); moreBtn.setAttribute('aria-expanded', o); });
+  document.addEventListener('click', () => { more.classList.remove('is-open'); moreBtn.setAttribute('aria-expanded', 'false'); });
   const burger = $('[data-burger]', header);
   const mnav = $('#mnav');
   burger.addEventListener('click', () => {
@@ -120,7 +134,7 @@ export function renderCart() {
       <div class="drawer__head"><h3>Your cart <span class="muted" style="font-family:var(--sans);font-size:16px">(${cartCount()})</span></h3>
         <button class="icon-btn" data-close-cart aria-label="Close cart">${ICON.close}</button></div>
       <div class="drawer__ship">${sub === 0 ? `Free delivery on orders over <b>${money(DELIVERY.freeThreshold)}</b>` : left > 0 ? `You're <b class="gold">${money(left)}</b> away from free delivery` : `<b class="gold">You've unlocked free delivery!</b> 🎉`}
-        <div class="ship-bar"><span style="width:${pct}%"></span></div></div>
+        <div class="ship-bar"><span style="width:${pct}%"></span></div><a class="link-btn" href="#/delivery" data-close-cart style="display:inline-block;margin-top:8px">Check my delivery area &amp; fee →</a></div>
       <div class="drawer__lines" data-lenis-prevent>
         ${lines.length ? lines.map(lineHTML).join('') : `<div class="empty"><h3>Your cart is empty</h3><p>Let’s fix that. Start with this week’s specials.</p><a class="btn btn--sm" href="#/shop" data-close-cart>Shop now ${ICON.arrow}</a></div>`}
       </div>
@@ -128,6 +142,8 @@ export function renderCart() {
         <div class="sumrow"><span>Subtotal</span><b>${money(sub)}</b></div>
         <div class="sumrow muted"><span>Delivery</span><span>${left > 0 ? `${money(DELIVERY.fee)} or free over ${money(DELIVERY.freeThreshold)}` : 'Free'}</span></div>
         <a class="btn btn--block magnetic" href="#/checkout" data-close-cart>Checkout · ${money(sub)} ${ICON.arrow}</a>
+        <div class="wa-order"><label class="sr" for="waBranch">Branch</label><select class="select" id="waBranch">${BRANCHES.map((b) => `<option value="${b.id}" ${state.branch === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}</select>
+          <a class="btn btn--wa btn--sm" id="waOrder" target="_blank" rel="noopener" href="#">${ICON.whatsapp} Order on WhatsApp</a></div>
         <a class="btn btn--ghost btn--block btn--sm" href="#/shop" data-close-cart>Keep shopping</a>
       </div>` : ''}
     </div>`;
@@ -139,6 +155,18 @@ export function renderCart() {
     })
   );
   $$('[data-remove]', d).forEach((b) => b.addEventListener('click', () => removeLine(b.dataset.remove)));
+  const wa = $('#waOrder', d);
+  if (wa) {
+    const build = () => {
+      const b = BRANCHES.find((x) => x.id === $('#waBranch', d).value);
+      const u = currentUser();
+      const items = cartLines().map((l) => `• ${l.qty} × ${l.product.name}${l.product.unit === 'kg' ? ' (' + weightLabel(l.weight) + ')' : ''}${l.prep ? ' · ' + l.prep : ''}${l.notes ? ' · "' + l.notes + '"' : ''} = ${money(l.total)}`).join('\n');
+      const text = `Hi Iqbal's ${b.name}! I'd like to place an order:\n\n${items}\n\nSubtotal: ${money(cartSubtotal())}${u ? `\n\nName: ${u.name}\nCell: ${u.cell}${u.address ? '\nAddress: ' + u.address : ''}` : ''}\n\nDelivery or collection: `;
+      wa.href = `https://wa.me/${b.phoneIntl}?text=${encodeURIComponent(text)}`;
+    };
+    build();
+    $('#waBranch', d).addEventListener('change', build);
+  }
 }
 
 function lineHTML(l) {
@@ -164,10 +192,10 @@ export function renderFooter() {
       <div class="footer__cols">
         <div><h4>Shop</h4><ul>
           <li><a href="#/shop?cat=beef">Beef</a></li><li><a href="#/shop?cat=lamb">Lamb &amp; Mutton</a></li><li><a href="#/shop?cat=chicken">Chicken</a></li>
-          <li><a href="#/shop?cat=braai">Braai Packs</a></li><li><a href="#/shop?cat=bakery">Rotis &amp; Bakery</a></li><li><a href="#/weekly-box">Iqbal’s Weekly Box</a></li></ul></div>
+          <li><a href="#/shop?cat=braai">Braai Packs</a></li><li><a href="#/eid">Eid &amp; Ramadan</a></li><li><a href="#/shop?cat=bakery">Rotis &amp; Bakery</a></li><li><a href="#/weekly-box">Iqbal’s Weekly Box</a></li></ul></div>
         <div><h4>Help</h4><ul>
           <li><a href="#/account">My account</a></li><li><a href="#/cut-to-order">Cut to order</a></li><li><a href="#/guide">Cooking guide</a></li>
-          <li><a href="#/recipes">Recipes</a></li><li><a href="#/contact">Contact us</a></li><li><button data-open-chat class="link-plain">Ask the Butcher</button></li></ul></div>
+          <li><a href="#/recipes">Recipes</a></li><li><a href="#/contact">Contact us</a></li><li><a href="#/delivery">Delivery areas</a></li><li><a href="#/functions">Functions &amp; catering</a></li><li><a href="#/meal-planner">Meal planner</a></li><li><a href="#/rewards">Iqbal’s Rewards</a></li><li><a href="#/admin">Staff login</a></li><li><button data-open-chat class="link-plain">Ask the Butcher</button></li></ul></div>
         <div><h4>Visit us</h4><ul>
           ${BRANCHES.map((b) => `<li><b>${b.name}</b><br><span class="muted">${b.address}</span><br><a href="tel:${b.phone.replace(/\s/g, '')}">${b.phone}</a> · <span data-open-status="${b.id}">${openStatus(b).label}</span><br><small class="muted">${b.hoursLabel}</small></li>`).join('')}
           </ul></div>
