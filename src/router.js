@@ -42,7 +42,7 @@ const ROUTES = [
   { path: 'meal-planner', nav: 'more', title: `Meal planner · ${TITLE}`, view: { render: F.renderPlanner, mount: F.mountPlanner } },
   { path: 'rewards', nav: 'more', title: `Iqbal’s Rewards · ${TITLE}`, view: { render: F.renderRewards } },
   { path: 'cut-studio', nav: 'studio', title: `Cut Studio · ${TITLE}`, view: Studio },
-  { path: 'game', nav: 'more', title: `Flying Steak game · ${TITLE}`, view: Game },
+  { path: 'game', nav: 'game', title: `Flying Steak game · ${TITLE}`, view: Game },
   { path: 'admin', nav: '', title: `Shop admin · ${TITLE}`, view: Admin },
   { path: 'terms', nav: 'legal', title: `Terms & Conditions · ${TITLE}`, view: Legal, params: { slug: 'terms' } },
   { path: 'privacy', nav: 'legal', title: `Privacy Policy · ${TITLE}`, view: Legal, params: { slug: 'privacy' } },

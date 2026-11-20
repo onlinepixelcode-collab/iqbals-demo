@@ -252,6 +252,18 @@ function showPayment(root, details) {
 }
 
 /* ---------------- SUCCESS ---------------- */
+/* "Play while you wait" card · shown while an order is still being prepared */
+export function waitGameCard(o) {
+  const { steps, idx } = orderStatus(o);
+  if (idx >= steps.length - 1) return '';
+  const signedIn = !!currentUser();
+  return `<a class="waitgame" href="#/game?order=${o.id}" data-cursor="view">
+    <span class="waitgame__art" aria-hidden="true"><span class="gt-blade gt-blade--top"></span><span class="gt-steak"></span><span class="gt-blade gt-blade--bot"></span></span>
+    <span class="waitgame__body"><small>While we prepare order #${o.id}</small><b>Play Flying Steak</b><span>Flap a ribeye past the knives and cleavers. ${signedIn ? `Earn up to ${REWARDS.gameMax} Rewards points a day.` : 'Sign in to earn Rewards points while you play.'}</span></span>
+    <span class="btn waitgame__btn">${ICON.game} Play now</span>
+  </a>`;
+}
+
 export function renderSuccess(params) {
   const o = findOrder(params.id);
   if (!o) return `<section class="success"><div class="wrap"><h1 class="h-lg">Order not found</h1><a class="btn" href="#/shop" style="margin-top:20px">Back to shop</a></div></section>`;
@@ -259,12 +271,13 @@ export function renderSuccess(params) {
   const { steps, idx } = orderStatus(o);
   return `<section class="success" data-theme="light"><div class="wrap" style="max-width:820px">
     <div class="success__tick">${ICON.check}</div>
-    <p class="eyebrow">Shukran, ${esc(o.name.split(' ')[0])}!</p>
+    <p class="eyebrow">Thank you, ${esc(o.name.split(' ')[0])}!</p>
     <h1 class="h-lg">Your order is in.</h1>
     <div class="ordno">#${o.id}</div>
     <p class="lead" style="margin:0 auto 10px">${o.method === 'delivery' ? `We’ll deliver to <b>${esc(o.address)}</b>` : `Collect from <b>Iqbal’s ${b.name}</b>, ${b.address}`} on <b>${new Date(o.date + 'T12:00').toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long' })}</b>, ${o.slot}.</p>
     <p class="muted">Total ${money(o.total)}${o.pointsEarned ? ` · +${o.pointsEarned} Rewards points` : ''} · ${o.payment === 'cash' ? 'Pay on ' + (o.method === 'collect' ? 'collection' : 'delivery') : `Paid (test ref ${o.paymentRef})`}</p>
     <div class="timeline" style="margin:40px 0">${steps.map((s, i) => `<div class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-now' : ''}">${s}</div>`).join('')}</div>
+    ${waitGameCard(o)}
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <a class="btn" href="#/account">Track my order ${ICON.arrow}</a>
       <a class="btn btn--wa" href="https://wa.me/${b.phoneIntl}?text=${encodeURIComponent(`Hi Iqbal's, about my order #${o.id}`)}" target="_blank" rel="noopener">${ICON.whatsapp} WhatsApp the shop</a>

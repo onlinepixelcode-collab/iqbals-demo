@@ -8,6 +8,7 @@ import { PRODUCTS, productById, unitPrice } from '../data/products.js';
 import { cardHTML } from '../components/product.js';
 import { setupTilt } from '../lib/motion.js';
 import { navigate } from '../router.js';
+import { waitGameCard } from './checkout.js';
 import { openCart } from '../components/shell.js';
 
 /* ---------------- AUTH ---------------- */
@@ -178,6 +179,7 @@ function ordersTab() {
       <div class="order__head"><div><b>#${o.id}</b><div class="muted" style="font-size:15px">${new Date(o.created).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })} · ${o.method === 'delivery' ? 'Delivery' : 'Collection'} on ${o.date} · ${o.slot}</div></div>
         <div style="text-align:right"><b style="font-family:var(--serif);font-size:26px">${money(o.total)}</b><div class="muted" style="font-size:14px">${o.lines.length} item${o.lines.length === 1 ? '' : 's'}</div></div></div>
       <div class="timeline">${steps.map((s, i) => `<div class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-now' : ''}">${s}</div>`).join('')}</div>
+      ${waitGameCard(o)}
       <details><summary class="gold" style="cursor:pointer;font-weight:700">View items</summary><ul style="margin:12px 0;padding-left:18px;color:var(--text-dim)">${o.lines.map((l) => `<li>${l.qty} × ${esc(l.name)} ${l.unit === 'kg' ? '· ' + weightLabel(l.weight) : ''} ${l.prep ? '· ' + esc(l.prep) : ''} · ${money(l.total)}</li>`).join('')}</ul></details>
       <button class="btn btn--sm" data-reorder="${o.id}">Re-order ${ICON.arrow}</button>
     </article>`;
@@ -269,7 +271,7 @@ function overviewTab() {
     </div>
     ${last ? (() => { const { steps, idx } = orderStatus(last); return `<article class="order"><div class="order__head"><div><span class="label">Latest order</span><br><b>#${last.id}</b> <span class="muted" style="font-size:15px">· ${last.lines.length} items · ${money(last.total)}</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn--sm" data-reorder="${last.id}">Re-order this ${ICON.arrow}</button><button class="btn btn--sm btn--ghost" data-goto="orders">All orders</button></div></div>
-      <div class="timeline">${steps.map((s, i) => `<div class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-now' : ''}">${s}</div>`).join('')}</div></article>`; })()
+      <div class="timeline">${steps.map((s, i) => `<div class="${i <= idx ? 'is-done' : ''} ${i === idx ? 'is-now' : ''}">${s}</div>`).join('')}</div>${waitGameCard(last)}</article>`; })()
       : `<div class="card-box center"><h3>Welcome to My Butcher</h3><p class="muted">Place your first order and you’ll be able to track it, re-order in one tap and see what you buy most.</p><a class="btn" href="#/shop">Start shopping ${ICON.arrow}</a></div>`}
     <div class="card-box mb-giveaway"><div><span class="label">Saturday Giveaway</span><h3 style="margin:6px 0 4px">${ws >= 500 ? 'You’re in this week’s draw! 🎉' : `Spend ${money(500 - ws)} more to enter`}</h3><p class="muted" style="margin:0">Spend R500 in a week (Wed–Tue) to enter the R1,000 braai hamper draw.</p></div>
       <div class="ship-bar" style="height:12px;margin-top:14px"><span style="width:${Math.min(100, (ws / 500) * 100)}%"></span></div></div>

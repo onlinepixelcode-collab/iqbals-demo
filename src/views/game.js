@@ -14,10 +14,12 @@ const H = 640; // logical height
 const GROUND = 64;
 const STEAK_W = 74; // sprite length
 
-export function render() {
+export function render(params, query) {
+  const oid = query?.get?.('order');
   return `<section class="game-page" data-theme="light">
     <div class="wrap game-wrap">
       <header class="game-head">
+        ${oid ? `<a class="game-back" href="#/success/${encodeURIComponent(oid)}">${ICON.arrow} Back to order #${oid.replace(/[^A-Za-z0-9]/g, '')} · see its status</a>` : ''}
         <p class="eyebrow">Iqbal’s Arcade</p>
         <h1 class="h-lg">Flying <span class="it">Steak</span></h1>
         <p class="lead">Tap to flap. Dodge the cleavers and knives, grab the gold halaal coins, and score Rewards points (up to ${REWARDS.gameMax} a day when you’re signed in).</p>

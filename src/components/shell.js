@@ -81,10 +81,13 @@ export function renderHeader() {
         ${LINKS.slice(1).map(([h, l, k]) => `<a href="${h}" data-nav="${k}">${l}</a>`).join('')}
       </nav>
       <div class="nav__actions">
-        <a class="icon-btn hide-sm" href="#/shop?focus=search" aria-label="Search products" data-cursor="hover">${ICON.search}</a>
-        <a class="icon-btn hide-sm" href="#/wishlist" aria-label="Wishlist">${ICON.heart}<span class="badge-count" data-wish-count></span></a>
+        <a class="nav__game" href="#/game" data-nav="game" aria-label="Play the Flying Steak game" title="Play Flying Steak">${ICON.game}<span>Play</span></a>
         <span class="nav__me hide-sm" data-me></span>
-        <button class="icon-btn" data-open-cart data-cart-target aria-label="Open cart">${ICON.cart}<span class="badge-count" data-cart-count></span></button>
+        <div class="nav__tools" role="group" aria-label="Search, wishlist and cart">
+          <a class="nav__tool hide-sm" href="#/shop?focus=search" aria-label="Search products" title="Search">${ICON.search}</a>
+          <a class="nav__tool hide-sm" href="#/wishlist" data-nav="wishlist" aria-label="Wishlist" title="Wishlist">${ICON.heart}<span class="badge-count" data-wish-count></span></a>
+          <button class="nav__tool nav__tool--cart" data-open-cart data-cart-target aria-label="Open cart" title="Cart">${ICON.cart}<span class="badge-count" data-cart-count></span></button>
+        </div>
         <button class="icon-btn nav__burger" data-burger aria-label="Open menu" aria-expanded="false">${ICON.menu}</button>
       </div>
     </div>
