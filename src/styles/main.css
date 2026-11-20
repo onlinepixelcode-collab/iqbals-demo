@@ -2021,3 +2021,10 @@ a.quick__item:hover { transform: translateY(-3px); border-color: #9b1515; }
   .nav__tool--cart { width: 40px; height: 40px; }
 }
 @media (max-width: 1180px) { .nav__game svg { width: 24px; height: 24px; } }
+/* bigger header logo */
+:root { --header-h: 96px; }
+.nav__brand .logo-wide { --h: 70px !important; }
+@media (max-width: 1180px) { :root { --header-h: 88px; } .nav__brand .logo-wide { --h: 62px !important; } }
+@media (max-width: 720px) { :root { --header-h: 78px; } .nav__brand .logo-wide { --h: 54px !important; } }
+.nav__actions .nav__game svg { width: 22px; height: 22px; stroke-width: 2; } @media (max-width: 1180px) { .nav__actions .nav__game svg { width: 25px; height: 25px; } }
+.nav__game svg { flex: none; } @media (max-width: 1180px) { .nav__actions .nav__game { width: 44px; padding: 0; justify-content: center; } .nav__actions .nav__game span { display: none; } } @media (max-width: 720px) { .nav__actions .nav__game { width: 40px; height: 40px; } }

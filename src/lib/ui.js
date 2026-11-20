@@ -61,7 +61,7 @@ export const ICON = {
   edit: i('<path d="M4 20h4L19 9l-4-4L4 16v4Z"/>'),
   bell: i('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2Z"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
   gift: i('<rect x="3" y="8" width="18" height="13" rx="1"/><path d="M3 12h18M12 8v13M12 8S10 3 7.5 4.5 9 8 12 8Zm0 0s2-5 4.5-3.5S15 8 12 8Z"/>'),
-  game: i('<rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 11v3M5.5 12.5h3M15 12h.01M18 13h.01"/>'),
+  game: i('<path d="M6.5 7.5h11a4.6 4.6 0 0 1 4.4 5.9l-1 3.4a2.4 2.4 0 0 1-4 1l-2.3-2.3H9.4l-2.3 2.3a2.4 2.4 0 0 1-4-1l-1-3.4a4.6 4.6 0 0 1 4.4-5.9z"/><path d="M8 10.5v3.5M6.25 12.25h3.5"/><circle cx="15.6" cy="11.2" r=".9" fill="currentColor" stroke="none"/><circle cx="17.8" cy="13.4" r=".9" fill="currentColor" stroke="none"/>'),
   moon: i('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/>'),
   trash: i('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
 };
