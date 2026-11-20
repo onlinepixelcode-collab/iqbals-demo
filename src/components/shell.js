@@ -75,7 +75,7 @@ export function renderMe() {
   const u = currentUser();
   el.innerHTML = u
     ? `<a class="mybutcher" href="#/account" data-nav="account">${ICON.user}<span><small>My Butcher</small>${esc(u.name.split(' ')[0])}</span></a>`
-    : `<a class="nav__signin" href="#/register">Register</a><a class="mybutcher" href="#/login" data-nav="account">${ICON.user}<span><small>Sign in</small>My Butcher</span></a>`;
+    : `<a class="mybutcher" href="#/login" data-nav="account">${ICON.user}<span><small>Sign in · Register</small>My Butcher</span></a>`;
 }
 
 export function updateCounts() {
