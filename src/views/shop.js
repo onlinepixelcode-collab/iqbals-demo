@@ -94,7 +94,7 @@ export function mount(root, params, query) {
       : wish
         ? `<div class="empty" style="grid-column:1/-1"><h3>No favourites yet</h3><p>Tap the ♥ on any product to save it here.</p><a class="btn" href="#/shop">Browse the shop</a></div>`
         : `<div class="empty" style="grid-column:1/-1"><h3>Nothing matches that</h3><p>Try a different search or reset the filters. Or ask the butcher, we can probably cut it for you.</p><a class="btn" href="#/cut-to-order">Request a special cut</a></div>`;
-    gsap.from($$('.pcard', grid), { y: 30, opacity: 0, duration: 0.6, stagger: 0.03, ease: 'power3.out', clearProps: 'transform,opacity' });
+    if ($$('.pcard', grid).length) gsap.from($$('.pcard', grid), { y: 30, opacity: 0, duration: 0.6, stagger: 0.03, ease: 'power3.out', clearProps: 'transform,opacity' });
     setupTilt(grid, '.pcard');
     syncChips();
   };

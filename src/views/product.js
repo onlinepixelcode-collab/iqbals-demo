@@ -29,7 +29,7 @@ export function render(params) {
         <div class="pd__price"><b>${money(unitPrice(p))}</b>${p.special ? `<s>${money(p.price)}</s>` : ''}<small>${perLabel(p)}</small></div>
         <p class="lead">${esc(p.desc)}</p>
         <div class="pd__facts">
-          <div><b>Best for</b>${esc(p.best)}</div><div><b>Certification</b>NIHT halaal</div><div><b>Freshness</b>Cut on the day</div>
+          <div><b>Best for</b>${esc(p.best)}</div><div><b>Certification</b>NIHT halaal</div><div><b>Freshness</b>Cold room 0–4 °C · cut on the day</div>
         </div>
         <div id="pdOpts"></div>
         <div class="field"><label for="pdNotes">Special instructions for the butcher</label>

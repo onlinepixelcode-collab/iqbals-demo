@@ -105,6 +105,7 @@ export function render() {
           <div><p class="countdown__label">Specials end Sunday at 6:30 PM</p><div class="countdown" id="countdown" aria-live="off">
             ${['Days', 'Hrs', 'Min', 'Sec'].map((l) => `<div><b data-cd="${l}">00</b><small>${l}</small></div>`).join('')}</div></div>
         </div>
+        <span class="cold-badge" style="margin:-18px 0 22px">Kept at 0–4 °C in our cold room until it’s cut</span>
         <div class="specials" id="specialsList">
           ${specials.map((p) => `<div class="special">
             <div class="photo">${img(p.img, 200, p.name)}</div>
@@ -115,6 +116,7 @@ export function render() {
               <button class="add-mini" data-add="${p.id}">${ICON.plus} Add</button>
             </div></div>`).join('')}
         </div>
+        <div class="mist" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
       </div>
       <div class="comp" data-reveal>
         <div class="comp__ribbon gingham" aria-hidden="true">🏆</div>
@@ -214,6 +216,17 @@ export function render() {
       <div class="sec-head"><div><p class="eyebrow">Visit us</p><h2 class="h-lg" id="brTitle" data-split>Two shops.<br><span class="it">One standard.</span></h2></div>
       <p class="lead">Pop in for the counter, the boerie rolls and a chat with the butchers, or order ahead and collect.</p></div>
       <div class="branches">${BRANCHES.map(branchCard).join('')}</div>
+    </div>
+  </section>
+
+  <section class="sec" data-theme="light" style="padding-top:0">
+    <div class="wrap">
+      <a class="game-teaser" href="#/game" data-cursor="view">
+        <div><p class="eyebrow">Iqbal’s Arcade</p><h2 class="h-lg">Flying <span class="it">Steak.</span></h2>
+          <p class="lead">Flap a ribeye past the cleavers and knives. Every point earns Rewards points when you’re signed in.</p>
+          <span class="btn">${ICON.game} Play now</span></div>
+        <div class="game-teaser__art" aria-hidden="true"><span class="gt-blade gt-blade--top"></span><span class="gt-steak"></span><span class="gt-blade gt-blade--bot"></span><span class="gt-coin">H</span></div>
+      </a>
     </div>
   </section>
 

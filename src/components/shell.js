@@ -1,35 +1,67 @@
 /* Header, mobile menu, bottom nav, cart drawer and footer. */
 import { BUSINESS, BRANCHES, DELIVERY, u } from '../config/site.js';
 import { $, $$, ICON, money, weightLabel, esc, toast, openStatus } from '../lib/ui.js';
-import { state, subscribe, cartLines, cartCount, cartSubtotal, setQty, removeLine, currentUser, subscribeNewsletter } from '../lib/store.js';
+import { state, subscribe, cartLines, cartCount, cartSubtotal, setQty, removeLine, currentUser, subscribeNewsletter, pointsBalance } from '../lib/store.js';
 import { logoWide, halaalSeal } from './brand.js';
+import { PRODUCTS, CATEGORIES, unitPrice } from '../data/products.js';
 import { stopScroll, startScroll } from '../lib/motion.js';
 
-const MORE = [
-  ['#/guide', 'Cooking guide', 'Doneness & temperatures'],
-  ['#/meal-planner', 'Meal planner', 'Plan the week, one shopping list'],
-  ['#/functions', 'Functions & catering', 'Quotes for weddings & big braais'],
-  ['#/delivery', 'Delivery areas', 'Check your fee & next slot'],
-  ['#/rewards', 'Iqbal’s Rewards', 'Earn points on every order'],
-  ['#/cut-to-order', 'Cut to order', 'Special cuts on request'],
+/* All the extra pages, shown in the Shop mega menu (desktop) and the mobile menu */
+const SERVICES = [
+  ['#/cut-studio', 'Cut Studio', 'Build your cut, watch it on the bandsaw', 'knife'],
+  ['#/weekly-box', 'Weekly Box', 'Good meat delivered every week', 'box'],
+  ['#/home/braai', 'Braai Builder', 'How much meat for your braai?', 'flame'],
+  ['#/meal-planner', 'Meal planner', 'Plan the week, one shopping list', 'calendar'],
+  ['#/functions', 'Functions & catering', 'Quotes for weddings & big braais', 'user'],
+  ['#/recipes', 'Recipes', 'Biryani, curry, braai & more', 'chat'],
+  ['#/guide', 'Cooking guide', 'Doneness & temperatures', 'clock'],
+  ['#/delivery', 'Delivery areas', 'Check your fee & next slot', 'truck'],
+  ['#/rewards', 'Iqbal’s Rewards', 'Earn points on every order', 'gift'],
+  ['#/game', 'Flying Steak game', 'Play & win Rewards points', 'game'],
 ];
+const MORE = SERVICES.map(([h, l, d]) => [h, l, d]);
 const LINKS = [
   ['#/', 'Home', ''],
-  ['#/shop', 'Shop', 'shop'],
+  ['#/cut-studio', 'Cut Studio', 'studio'],
   ['#/weekly-box', 'Weekly Box', 'weekly-box'],
   ['#/eid', 'Eid & Ramadan', 'eid'],
-  ['#/recipes', 'Recipes', 'recipes'],
   ['#/contact', 'Contact', 'contact'],
 ];
+const catFrom = (id) => Math.min(...PRODUCTS.filter((p) => p.category === id).map(unitPrice));
+const catCount = (id) => PRODUCTS.filter((p) => p.category === id).length;
+
+function megaHTML() {
+  const sp = PRODUCTS.filter((p) => p.special);
+  const star = sp[0];
+  return `<div class="mega" id="mega" role="region" aria-label="Shop menu">
+    <div class="mega__inner wrap">
+      <div class="mega__cats">
+        <div class="mega__title"><span class="label">Shop by category</span><a href="#/shop" class="mega__all">Shop all ${PRODUCTS.length} products ${ICON.arrow}</a></div>
+        <div class="mega__grid">${CATEGORIES.map((c) => `<a class="mega__cat" href="#/shop?cat=${c.id}"><span class="photo"><img src="${u(c.img, 360)}" alt="" loading="lazy"></span>
+          <span class="mega__cat-body"><b>${c.name}</b><small>${catCount(c.id)} items · from ${money(catFrom(c.id))}</small></span></a>`).join('')}</div>
+      </div>
+      <div class="mega__services">
+        <span class="label">Services &amp; tools</span>
+        <ul>${SERVICES.map(([h, l, d, i]) => `<li><a href="${h}">${ICON[i]}<span><b>${l}</b><small>${d}</small></span></a></li>`).join('')}</ul>
+      </div>
+      ${star ? `<a class="mega__feature" href="#/home/specials">
+        <span class="photo"><img src="${u(star.img, 500)}" alt="" loading="lazy"></span>
+        <span class="mega__feature-body"><span class="tag tag--gingham">Crazy Specials</span><b>${star.name}</b><span><s>${money(star.price)}</s> ${money(unitPrice(star))}${star.unit === 'kg' ? '/kg' : ''}</span><small>${sp.length} specials this week · ends Sunday 6:30 PM</small><span class="btn btn--sm">See all specials ${ICON.arrow}</span></span>
+      </a>` : ''}
+    </div>
+  </div>`;
+}
 
 export function renderHeader() {
   const header = $('#header');
   header.innerHTML = `
     <div class="nav">
       <a class="nav__brand" href="#/" aria-label="Iqbal's Meat & Deli home">${logoWide({ h: 50 })}</a>
-      <nav class="nav__links" aria-label="Main">${LINKS.map(([h, l, k]) => `<a href="${h}" data-nav="${k}">${l}</a>`).join('')}
-        <div class="nav__more"><button class="nav__more-btn" data-nav="more" aria-expanded="false" aria-haspopup="true">More <span aria-hidden="true">▾</span></button>
-          <div class="nav__drop" role="menu">${MORE.map(([h, l, d]) => `<a href="${h}" role="menuitem"><b>${l}</b><small>${d}</small></a>`).join('')}</div></div></nav>
+      <nav class="nav__links" aria-label="Main">
+        <a href="#/" data-nav="">Home</a>
+        <div class="nav__shop"><a href="#/shop" class="nav__shop-btn" data-nav="shop" aria-expanded="false" aria-controls="mega">Shop <span class="nav__caret" aria-hidden="true">▾</span></a></div>
+        ${LINKS.slice(1).map(([h, l, k]) => `<a href="${h}" data-nav="${k}">${l}</a>`).join('')}
+      </nav>
       <div class="nav__actions">
         <a class="icon-btn hide-sm" href="#/shop?focus=search" aria-label="Search products" data-cursor="hover">${ICON.search}</a>
         <a class="icon-btn hide-sm" href="#/wishlist" aria-label="Wishlist">${ICON.heart}<span class="badge-count" data-wish-count></span></a>
@@ -38,35 +70,100 @@ export function renderHeader() {
         <button class="icon-btn nav__burger" data-burger aria-label="Open menu" aria-expanded="false">${ICON.menu}</button>
       </div>
     </div>
-    <div class="mnav" id="mnav" data-lenis-prevent>
-      ${LINKS.map(([h, l]) => `<a href="${h}">${l}</a>`).join('')}
-      ${MORE.map(([h, l]) => `<a href="${h}" class="mnav__sm">${l}</a>`).join('')}
-      <a href="#/account">My Butcher</a>
-      <a href="#/login">Sign in</a>
-      <a href="#/register">Register</a>
-      <p class="mnav__meta">${BRANCHES.map((b) => `${b.name}: <a href="tel:${b.phone.replace(/\s/g, '')}" style="font:inherit;color:var(--gold-hi)">${b.phone}</a>`).join(' · ')}</p>
-    </div>`;
+    ${megaHTML()}
+    <div class="mega-scrim" id="megaScrim"></div>
+    <div class="mnav" id="mnav" data-lenis-prevent aria-hidden="true"></div>`;
 
-  const more = $('.nav__more', header);
-  const moreBtn = $('.nav__more-btn', header);
-  moreBtn.addEventListener('click', (e) => { e.stopPropagation(); const o = !more.classList.contains('is-open'); more.classList.toggle('is-open', o); moreBtn.setAttribute('aria-expanded', o); });
-  document.addEventListener('click', () => { more.classList.remove('is-open'); moreBtn.setAttribute('aria-expanded', 'false'); });
-  const burger = $('[data-burger]', header);
-  const mnav = $('#mnav');
-  burger.addEventListener('click', () => {
-    const open = !mnav.classList.contains('is-open');
-    mnav.classList.toggle('is-open', open);
-    burger.setAttribute('aria-expanded', open);
-    burger.innerHTML = open ? ICON.close : ICON.menu;
-    open ? stopScroll() : startScroll();
+  /* mega menu: opens on hover (desktop) or click, closes on leave / Escape / link click */
+  const btn = $('.nav__shop-btn', header);
+  const mega = $('#mega', header);
+  let tOpen = 0, tClose = 0;
+  const open = () => { clearTimeout(tClose); header.classList.add('mega-open'); btn.setAttribute('aria-expanded', 'true'); };
+  const close = () => { clearTimeout(tOpen); header.classList.remove('mega-open'); btn.setAttribute('aria-expanded', 'false'); };
+  const hoverable = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (hoverable) {
+    [btn.parentElement, mega].forEach((el) => {
+      el.addEventListener('mouseenter', () => { clearTimeout(tClose); tOpen = setTimeout(open, 90); });
+      el.addEventListener('mouseleave', () => { clearTimeout(tOpen); tClose = setTimeout(close, 180); });
+    });
+  }
+  btn.addEventListener('click', (e) => {
+    if (!header.classList.contains('mega-open')) { e.preventDefault(); open(); }
+    else if (!hoverable) { e.preventDefault(); close(); }
   });
-  $$('a', mnav).forEach((a) =>
-    a.addEventListener('click', () => {
-      mnav.classList.remove('is-open');
-      burger.innerHTML = ICON.menu;
-      startScroll();
-    })
-  );
+  btn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown') { e.preventDefault(); open(); mega.querySelector('a')?.focus(); } });
+  mega.addEventListener('focusout', (e) => { if (!header.contains(e.relatedTarget)) close(); });
+  mega.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+  $('#megaScrim', header).addEventListener('click', close);
+  document.addEventListener('keydown', (e) => e.key === 'Escape' && close());
+  window.addEventListener('hashchange', close);
+  $('[data-burger]', header).addEventListener('click', () => ($('#mnav').classList.contains('is-open') ? closeMenu() : openMenu()));
+}
+
+/* ---------------- MOBILE MENU ---------------- */
+const TILES = [
+  ['#/', 'Home', 'home'], ['#/shop', 'Shop all', 'shop'], ['#/cut-studio', 'Cut Studio', 'knife'],
+  ['#/weekly-box', 'Weekly Box', 'box'], ['#/eid', 'Eid & Ramadan', 'moon'], ['#/contact', 'Contact', 'phone'],
+];
+let mnavTab = 'menu';
+function mnavHTML() {
+  const me = currentUser();
+  const sp = PRODUCTS.filter((p) => p.special);
+  return `<div class="mnav__inner">
+    <form class="mnav__search" role="search">${ICON.search}<label class="sr" for="mnavQ">Search products</label><input id="mnavQ" type="search" placeholder="Search ribeye, rotis, wors…" autocomplete="off"></form>
+    <div class="mnav__tabs" role="tablist">
+      <button role="tab" data-mtab="menu" aria-selected="${mnavTab === 'menu'}" class="${mnavTab === 'menu' ? 'is-on' : ''}">${ICON.menu} Menu</button>
+      <button role="tab" data-mtab="cats" aria-selected="${mnavTab === 'cats'}" class="${mnavTab === 'cats' ? 'is-on' : ''}">${ICON.shop} Categories</button>
+    </div>
+    <div class="mnav__panel" data-mpanel="menu" ${mnavTab === 'menu' ? '' : 'hidden'}>
+      <a class="mnav__me" href="${me ? '#/account' : '#/login'}"><span class="mnav__av">${me ? esc(me.name[0]) : ICON.user}</span>
+        <span><b>My Butcher</b><small>${me ? `Salaam ${esc(me.name.split(' ')[0])} · ${pointsBalance()} Rewards points` : 'Sign in or register · orders, re-order & rewards'}</small></span>${ICON.arrow}</a>
+      <nav class="mnav__grid" aria-label="Main">${TILES.map(([h, l, i], k) => `<a href="${h}" style="--i:${k}">${ICON[i]}<span>${l}</span></a>`).join('')}</nav>
+      <p class="mnav__label">Services &amp; tools</p>
+      <ul class="mnav__list">${SERVICES.filter(([h]) => !['#/cut-studio', '#/weekly-box'].includes(h)).map(([h, l, dsc, i]) => `<li><a href="${h}">${ICON[i].replace('<svg', '<svg class="mnav__ico"')}<span><b>${l}</b><small>${dsc}</small></span>${ICON.arrow}</a></li>`).join('')}</ul>
+      <p class="mnav__label">Our branches</p>
+      <div class="mnav__branches">${BRANCHES.map((b) => { const st = openStatus(b); return `<div class="mnav__branch"><div><b>${b.name}</b><span class="status ${st.open ? '' : 'is-closed'}"><i></i>${st.label}</span></div>
+        <div class="mnav__btns"><a class="btn btn--sm" href="tel:${b.phone.replace(/\s/g, '')}">${ICON.phone} Call</a><a class="btn btn--sm btn--wa" href="https://wa.me/${b.phoneIntl}" target="_blank" rel="noopener">${ICON.whatsapp} WhatsApp</a></div></div>`; }).join('')}</div>
+      <div class="mnav__social"><a href="${BUSINESS.instagram}" target="_blank" rel="noopener" aria-label="Instagram">${ICON.instagram}</a><a href="${BUSINESS.facebook}" target="_blank" rel="noopener" aria-label="Facebook">${ICON.facebook}</a><span>NIHT certified halaal</span></div>
+    </div>
+    <div class="mnav__panel" data-mpanel="cats" ${mnavTab === 'cats' ? '' : 'hidden'}>
+      <div class="mnav__cats">${CATEGORIES.map((c) => `<a class="mnav__cat" href="#/shop?cat=${c.id}"><span class="photo"><img src="${u(c.img, 240)}" alt="" loading="lazy"></span><span><b>${c.name}</b><small>${catCount(c.id)} items · from ${money(catFrom(c.id))}</small></span>${ICON.arrow}</a>`).join('')}</div>
+      <a class="mnav__special" href="#/home/specials"><span class="tag tag--gingham">Crazy Specials</span><b>${sp.length} specials this week</b><small>Ends Sunday 6:30 PM</small>${ICON.arrow}</a>
+      <a class="btn btn--block" href="#/shop">Shop all ${PRODUCTS.length} products ${ICON.arrow}</a>
+    </div>
+  </div>`;
+}
+export function openMenu() {
+  const m = $('#mnav');
+  m.innerHTML = mnavHTML();
+  m.classList.add('is-open');
+  m.setAttribute('aria-hidden', 'false');
+  $('#header').classList.add('is-menu');
+  const burger = $('[data-burger]');
+  burger.setAttribute('aria-expanded', 'true');
+  burger.innerHTML = ICON.close;
+  document.documentElement.classList.add('no-scroll');
+  stopScroll();
+  $$('a', m).forEach((a) => a.addEventListener('click', closeMenu));
+  $$('[data-mtab]', m).forEach((t) => t.addEventListener('click', () => {
+    mnavTab = t.dataset.mtab;
+    $$('[data-mtab]', m).forEach((x) => { x.classList.toggle('is-on', x === t); x.setAttribute('aria-selected', x === t); });
+    $$('[data-mpanel]', m).forEach((p) => (p.hidden = p.dataset.mpanel !== mnavTab));
+    m.scrollTop = 0;
+  }));
+  $('.mnav__search', m).addEventListener('submit', (e) => { e.preventDefault(); const q = $('#mnavQ', m).value.trim(); closeMenu(); location.hash = '#/shop' + (q ? '?q=' + encodeURIComponent(q) : '?focus=search'); });
+}
+export function closeMenu() {
+  const m = $('#mnav');
+  if (!m || !m.classList.contains('is-open')) return;
+  m.classList.remove('is-open');
+  m.setAttribute('aria-hidden', 'true');
+  $('#header').classList.remove('is-menu');
+  const burger = $('[data-burger]');
+  burger.setAttribute('aria-expanded', 'false');
+  burger.innerHTML = ICON.menu;
+  document.documentElement.classList.remove('no-scroll');
+  startScroll();
 }
 
 export function renderBottomNav() {
@@ -195,7 +292,7 @@ export function renderFooter() {
           <li><a href="#/shop?cat=braai">Braai Packs</a></li><li><a href="#/eid">Eid &amp; Ramadan</a></li><li><a href="#/shop?cat=bakery">Rotis &amp; Bakery</a></li><li><a href="#/weekly-box">Iqbal’s Weekly Box</a></li></ul></div>
         <div><h4>Help</h4><ul>
           <li><a href="#/account">My account</a></li><li><a href="#/cut-to-order">Cut to order</a></li><li><a href="#/guide">Cooking guide</a></li>
-          <li><a href="#/recipes">Recipes</a></li><li><a href="#/contact">Contact us</a></li><li><a href="#/delivery">Delivery areas</a></li><li><a href="#/functions">Functions &amp; catering</a></li><li><a href="#/meal-planner">Meal planner</a></li><li><a href="#/rewards">Iqbal’s Rewards</a></li><li><a href="#/admin">Staff login</a></li><li><button data-open-chat class="link-plain">Ask the Butcher</button></li></ul></div>
+          <li><a href="#/recipes">Recipes</a></li><li><a href="#/contact">Contact us</a></li><li><a href="#/delivery">Delivery areas</a></li><li><a href="#/functions">Functions &amp; catering</a></li><li><a href="#/meal-planner">Meal planner</a></li><li><a href="#/rewards">Iqbal’s Rewards</a></li><li><a href="#/game">Flying Steak game</a></li><li><a href="#/admin">Staff login</a></li><li><button data-open-chat class="link-plain">Ask the Butcher</button></li></ul></div>
         <div><h4>Visit us</h4><ul>
           ${BRANCHES.map((b) => `<li><b>${b.name}</b><br><span class="muted">${b.address}</span><br><a href="tel:${b.phone.replace(/\s/g, '')}">${b.phone}</a> · <span data-open-status="${b.id}">${openStatus(b).label}</span><br><small class="muted">${b.hoursLabel}</small></li>`).join('')}
           </ul></div>
@@ -247,7 +344,7 @@ export function initShell() {
     }
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeCart();
+    if (e.key === 'Escape') { closeCart(); closeMenu(); }
   });
   // refresh "open now" labels every minute
   setInterval(() => {

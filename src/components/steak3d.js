@@ -153,6 +153,23 @@ export function createSteakScene(container, { mode = 'hero', lite = false, onLab
   ground.receiveShadow = true;
   world.add(ground);
 
+  /* cold-room mist: soft sprites that roll low across the board */
+  const mist = [];
+  {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d'); const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, 'rgba(255,255,255,0.9)'); grd.addColorStop(0.4, 'rgba(235,244,248,0.45)'); grd.addColorStop(1, 'rgba(235,244,248,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+    const tex = new THREE.CanvasTexture(c);
+    for (let i = 0; i < (lite ? 7 : 14); i++) {
+      const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0 }));
+      const sc = 2.2 + Math.random() * 2.6;
+      m.scale.set(sc * 1.6, sc * 0.55, 1);
+      m.userData = { x0: -5 + Math.random() * 10, z: -2.2 + Math.random() * 4.4, y: 0.25 + Math.random() * 0.6, sp: 0.18 + Math.random() * 0.25, ph: Math.random() * 10, max: 0.16 + Math.random() * 0.16 };
+      mist.push(m);
+      world.add(m);
+    }
+  }
   const steak = new THREE.Group();
   const slices = [];
   let boardTop = 0;
@@ -290,6 +307,14 @@ export function createSteakScene(container, { mode = 'hero', lite = false, onLab
         }
       }
     }
+    mist.forEach((m) => {
+      const u = m.userData;
+      const span = 11;
+      const x = ((u.x0 + time * u.sp + 5.5) % span + span) % span - 5.5;
+      m.position.set(x, u.y + Math.sin(time * 0.6 + u.ph) * 0.08 + (ready ? boardTop : 0), u.z);
+      const edge = 1 - Math.min(1, Math.abs(x) / 5.2);
+      m.material.opacity = u.max * edge * (ready ? 1 : 0.4);
+    });
     camera.position.x += (mouse.x * 0.5 - camera.position.x) * 0.04;
     camera.lookAt(0, 0.4, 0);
     renderer.render(scene, camera);

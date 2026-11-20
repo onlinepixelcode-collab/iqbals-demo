@@ -316,3 +316,19 @@ export function toggleAlert(id) {
   return i < 0;
 }
 export const myAlerts = () => state.alerts.filter((a) => a.user === (state.session || 'guest'));
+
+/* ---------------- GAME ---------------- */
+/** Records a Flying Steak score. Signed-in players earn points (5 per score point),
+    capped per day at REWARDS.gameMax; only the improvement on today's best is paid out. */
+export function addGameScore(score) {
+  const user = state.session;
+  const today = new Date().toDateString();
+  const todays = state.games.filter((g) => g.user === (user || 'guest') && new Date(g.created).toDateString() === today);
+  const paid = todays.reduce((s, g) => s + g.points, 0);
+  const points = user ? Math.max(0, Math.min(REWARDS.gameMax, score * 5) - paid) : 0;
+  state.games.push({ user: user || 'guest', score, points, created: Date.now() });
+  save();
+  return points;
+}
+export const gameBest = () => state.games.filter((g) => g.user === (state.session || 'guest')).reduce((m, g) => Math.max(m, g.score), 0);
+export const gameTop = () => [...state.games].filter((g) => g.score > 0).sort((a, b) => b.score - a.score).slice(0, 5).map((g) => ({ ...g, name: g.user === 'guest' ? 'Guest' : state.users.find((u) => u.id === g.user)?.name.split(' ')[0] || 'Player' }));

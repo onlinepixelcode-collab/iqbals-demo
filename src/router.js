@@ -4,7 +4,7 @@
    ===================================================================== */
 import { $ } from './lib/ui.js';
 import { gsap, resetMotion, setupReveals, setupThemes, setupMagnetic, scrollTo, lenis, ScrollTrigger } from './lib/motion.js';
-import { setActiveNav, closeCart } from './components/shell.js';
+import { setActiveNav, closeCart, closeMenu } from './components/shell.js';
 import { closeModal, reduceMotion } from './lib/ui.js';
 
 import * as Home from './views/home.js';
@@ -16,6 +16,8 @@ import * as Extras from './views/extras.js';
 import * as Contact from './views/contact.js';
 import * as F from './views/features.js';
 import * as Admin from './views/admin.js';
+import * as Game from './views/game.js';
+import * as Studio from './views/studio.js';
 
 const TITLE = "Iqbal's Meat & Deli";
 const ROUTES = [
@@ -38,6 +40,8 @@ const ROUTES = [
   { path: 'delivery', nav: 'more', title: `Delivery areas · ${TITLE}`, view: { render: F.renderDelivery, mount: F.mountDelivery } },
   { path: 'meal-planner', nav: 'more', title: `Meal planner · ${TITLE}`, view: { render: F.renderPlanner, mount: F.mountPlanner } },
   { path: 'rewards', nav: 'more', title: `Iqbal’s Rewards · ${TITLE}`, view: { render: F.renderRewards } },
+  { path: 'cut-studio', nav: 'studio', title: `Cut Studio · ${TITLE}`, view: Studio },
+  { path: 'game', nav: 'more', title: `Flying Steak game · ${TITLE}`, view: Game },
   { path: 'admin', nav: '', title: `Shop admin · ${TITLE}`, view: Admin },
   { path: 'cut-to-order', nav: 'guide', title: `Cut to order · ${TITLE}`, view: { render: Extras.renderCut, mount: Extras.mountCut } },
 ];
@@ -68,11 +72,23 @@ export function navigate(hash, { replace = false } = {}) {
 }
 
 /* Page change: a quick, quiet fade (the big loader only plays on arrival). */
+/* Page change: a quick puff of freezer mist rolls across, the page swaps behind it. */
 async function curtain(dir) {
   const app = $('#app');
-  if (reduceMotion()) return;
-  if (dir === 'in') await gsap.to(app, { opacity: 0, y: 12, duration: 0.22, ease: 'power2.in' });
-  else await gsap.fromTo(app, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out', clearProps: 'transform,opacity' });
+  const fr = $('#frost');
+  if (reduceMotion() || !fr) return;
+  const puffs = fr.querySelectorAll('i');
+  if (dir === 'in') {
+    gsap.set(fr, { opacity: 0, display: 'block' });
+    gsap.fromTo(puffs, { scale: 0.4, yPercent: 60, opacity: 0 }, { scale: 1.25, yPercent: 0, opacity: 1, duration: 0.42, ease: 'power2.out', stagger: 0.025 });
+    gsap.to(app, { opacity: 0, duration: 0.25, ease: 'power1.in' });
+    await gsap.to(fr, { opacity: 1, duration: 0.3, ease: 'power1.out' });
+  } else {
+    gsap.fromTo(app, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out', clearProps: 'opacity' });
+    gsap.to(puffs, { yPercent: -40, scale: 1.6, duration: 0.6, ease: 'power1.out', stagger: 0.02 });
+    await gsap.to(fr, { opacity: 0, duration: 0.55, ease: 'power2.inOut' });
+    gsap.set(fr, { display: 'none' });
+  }
 }
 
 async function render() {
@@ -86,6 +102,7 @@ async function render() {
   }
 
   closeCart();
+  closeMenu();
   closeModal();
   if (!first) await curtain('in');
 
