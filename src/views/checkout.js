@@ -6,6 +6,7 @@ import { cartLines, cartSubtotal, deliveryFee, currentUser, placeOrder, findOrde
 const usablePoints = () => Math.min(pointsBalance(), Math.floor((cartSubtotal() * REWARDS.maxShare) / REWARDS.pointValue));
 import { processPayment, luhn } from '../lib/payments.js';
 import { navigate } from '../router.js';
+import { slotsFor } from './legal.js';
 import { scrollTo } from '../lib/motion.js';
 
 const tomorrow = () => {
@@ -13,7 +14,10 @@ const tomorrow = () => {
   d.setDate(d.getDate() + 1);
   return d.toISOString().slice(0, 10);
 };
-const isOpenDay = (iso) => !!BRANCHES[0].hours[new Date(iso + 'T12:00:00').getDay()];
+const branchById = (id) => BRANCHES.find((b) => b.id === id) || BRANCHES[0];
+const dow = (iso) => new Date(iso + 'T12:00:00').getDay();
+const isOpenDay = (iso, id = state.branch) => !!branchById(id).hours[dow(iso)];
+const closedDays = (id) => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].filter((d, i) => !branchById(id).hours[i]);
 
 export function render() {
   const lines = cartLines();
@@ -37,10 +41,11 @@ export function render() {
           </div>
           <div class="form-row">
             <div class="field"><label for="coBranch">Branch</label><select class="select" id="coBranch">${BRANCHES.map((b) => `<option value="${b.id}" ${user?.branch === b.id ? 'selected' : ''}>${b.name} · ${b.suburb}</option>`).join('')}</select></div>
-            <div class="field"><label for="coDate">Date</label><input class="input" type="date" id="coDate" min="${tomorrow()}" value="${nextOpen()}"><span class="field__err" id="coDateErr"></span></div>
+            <div class="field"><label for="coDate">Date</label><input class="input" type="date" id="coDate" min="${tomorrow()}" value="${nextOpen(user?.branch || state.branch)}"><span class="field__err" id="coDateErr"></span></div>
           </div>
           <span class="label" style="display:block;margin-bottom:12px">Time slot</span>
-          <div class="slots" role="radiogroup" aria-label="Time slot">${DELIVERY.slots.map((s, i) => `<button type="button" class="chip ${i === 1 ? 'is-on' : ''}" data-slot="${s}" role="radio" aria-checked="${i === 1}">${s}</button>`).join('')}</div>
+          <div class="slots" id="coSlots" role="radiogroup" aria-label="Time slot"></div>
+          <p class="muted co__hours" id="coHours"></p>
         </div>
         <div class="card-box">
           <h3>Your details</h3>
@@ -63,13 +68,13 @@ export function render() {
   </div>`;
 }
 
-function nextOpen() {
+function nextOpen(id = state.branch) {
   const d = new Date();
   for (let i = 1; i < 10; i++) {
     const x = new Date(d);
     x.setDate(d.getDate() + i);
     const iso = x.toISOString().slice(0, 10);
-    if (isOpenDay(iso)) return iso;
+    if (isOpenDay(iso, id)) return iso;
   }
   return tomorrow();
 }
@@ -100,14 +105,30 @@ export function mount(root) {
   };
   refresh();
   $$('[name=method]', root).forEach((r) => r.addEventListener('change', () => { st.method = r.value; refresh(); }));
-  $$('[data-slot]', root).forEach((b) => b.addEventListener('click', () => {
-    st.slot = b.dataset.slot;
-    $$('[data-slot]', root).forEach((x) => { x.classList.toggle('is-on', x === b); x.setAttribute('aria-checked', x === b); });
-  }));
+  const drawSlots = () => {
+    const b = branchById($('#coBranch', root).value);
+    const date = $('#coDate', root).value;
+    const list = date ? slotsFor(b, dow(date)) : [];
+    if (!list.includes(st.slot)) st.slot = list[0] || '';
+    $('#coSlots', root).innerHTML = list.length ? list.map((s) => `<button type="button" class="chip ${s === st.slot ? 'is-on' : ''}" data-slot="${s}" role="radio" aria-checked="${s === st.slot}">${s}</button>`).join('') : `<span class="muted">Iqbal’s ${b.name} is closed on this day. Please choose another date.</span>`;
+    $('#coHours', root).textContent = `${b.name} trading hours: ${b.hoursLabel}`;
+    $$('[data-slot]', root).forEach((x) => x.addEventListener('click', () => {
+      st.slot = x.dataset.slot;
+      $$('[data-slot]', root).forEach((y) => { y.classList.toggle('is-on', y === x); y.setAttribute('aria-checked', y === x); });
+    }));
+  };
+  $('#coDate', root).addEventListener('change', drawSlots);
+  $('#coBranch', root).addEventListener('change', () => {
+    const d = $('#coDate', root);
+    if (!d.value || !isOpenDay(d.value, $('#coBranch', root).value)) d.value = nextOpen($('#coBranch', root).value);
+    drawSlots();
+  });
   $('#coAddrPick', root)?.addEventListener('change', (e) => { $('#coAddr', root).value = e.target.value; refresh(); });
   $('#coAddr', root)?.addEventListener('change', refresh);
   $('#coPts', root)?.addEventListener('change', refresh);
   const br = $('#coBranch', root); if (br && !currentUser()?.branch) br.value = state.branch;
+  if (!isOpenDay($('#coDate', root).value, br.value)) $('#coDate', root).value = nextOpen(br.value);
+  drawSlots();
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -120,7 +141,8 @@ export function mount(root) {
     const date = v('coDate');
     $('#coDateErr', root).textContent = '';
     if (!date || date < tomorrow()) errs.coDate = 'Choose a date from tomorrow.';
-    else if (!isOpenDay(date)) errs.coDate = 'We’re closed on Mondays and Tuesdays. Please choose Wednesday to Sunday.';
+    else if (!isOpenDay(date, v('coBranch'))) errs.coDate = `Iqbal’s ${branchById(v('coBranch')).name} is closed on ${closedDays(v('coBranch')).join(' and ')}. Please choose another day.`;
+    else if (!st.slot) errs.coDate = 'Please choose a time slot.';
     $$('.field', form).forEach((f) => f.classList.remove('is-err'));
     $$('.field__err', form).forEach((f) => (f.textContent = ''));
     Object.entries(errs).forEach(([id, msg]) => {
@@ -165,7 +187,8 @@ function showPayment(root, details) {
     <div style="display:flex;gap:12px;flex-wrap:wrap">
       <button class="btn btn--ghost" id="payBack">← Back</button>
       <button class="btn magnetic" id="payGo" style="flex:1">Pay ${money(total)} ${ICON.arrow}</button>
-    </div>`;
+    </div>
+    <p class="muted co__legal">By placing this order you accept our <a href="#/terms" target="_blank">Terms &amp; Conditions</a>, <a href="#/shipping" target="_blank">Shipping Policy</a> and <a href="#/returns" target="_blank">Returns &amp; Refund Policy</a>. Your details are handled under our <a href="#/privacy" target="_blank">Privacy Policy</a>.</p>`;
   const body = $('#payBody', pay);
   const banks = ['Capitec', 'FNB', 'Standard Bank', 'Absa', 'Nedbank', 'TymeBank', 'Discovery Bank'];
   const draw = (m) => {

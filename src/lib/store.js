@@ -134,6 +134,7 @@ export const cartSubtotal = () => cartLines().reduce((s, l) => s + l.total, 0);
 export function deliveryFee(subtotal = cartSubtotal(), method = 'delivery', area = '') {
   if (method !== 'delivery' || subtotal === 0) return 0;
   if (subtotal >= DELIVERY.freeThreshold) return 0;
+  if (state.session && tierFor(pointsEarnedTotal()).name === 'Gold') return 0;
   const z = findZone(area || currentUser()?.address || '');
   return z ? z.fee : DELIVERY.fee;
 }

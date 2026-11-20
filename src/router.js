@@ -18,6 +18,7 @@ import * as F from './views/features.js';
 import * as Admin from './views/admin.js';
 import * as Game from './views/game.js';
 import * as Studio from './views/studio.js';
+import * as Legal from './views/legal.js';
 
 const TITLE = "Iqbal's Meat & Deli";
 const ROUTES = [
@@ -43,6 +44,10 @@ const ROUTES = [
   { path: 'cut-studio', nav: 'studio', title: `Cut Studio · ${TITLE}`, view: Studio },
   { path: 'game', nav: 'more', title: `Flying Steak game · ${TITLE}`, view: Game },
   { path: 'admin', nav: '', title: `Shop admin · ${TITLE}`, view: Admin },
+  { path: 'terms', nav: 'legal', title: `Terms & Conditions · ${TITLE}`, view: Legal, params: { slug: 'terms' } },
+  { path: 'privacy', nav: 'legal', title: `Privacy Policy · ${TITLE}`, view: Legal, params: { slug: 'privacy' } },
+  { path: 'shipping', nav: 'legal', title: `Shipping Policy · ${TITLE}`, view: Legal, params: { slug: 'shipping' } },
+  { path: 'returns', nav: 'legal', title: `Returns & Refund Policy · ${TITLE}`, view: Legal, params: { slug: 'returns' } },
   { path: 'cut-to-order', nav: 'guide', title: `Cut to order · ${TITLE}`, view: { render: Extras.renderCut, mount: Extras.mountCut } },
 ];
 

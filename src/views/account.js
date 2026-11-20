@@ -30,7 +30,8 @@ export function renderAuth(params, query) {
         ${reg ? `<div class="field"><label for="aCell">Cell number</label><input class="input" id="aCell" type="tel" autocomplete="tel" placeholder="07x xxx xxxx"><span class="field__err"></span></div>` : ''}
         <div class="field"><label for="aPass">Password</label><input class="input" id="aPass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" ${reg ? 'placeholder="At least 8 characters"' : ''}><span class="field__err"></span></div>
         ${reg ? `<div class="field"><label for="aAddr">Delivery address</label><input class="input" id="aAddr" autocomplete="street-address" placeholder="Street, suburb"><span class="field__err"></span></div>
-        <div class="field"><label for="aBranch">Preferred branch</label><select class="select" id="aBranch">${BRANCHES.map((b) => `<option value="${b.id}">${b.name} · ${b.suburb}</option>`).join('')}</select></div>` : ''}
+        <div class="field"><label for="aBranch">Preferred branch</label><select class="select" id="aBranch">${BRANCHES.map((b) => `<option value="${b.id}">${b.name} · ${b.suburb}</option>`).join('')}</select></div>
+        <div class="field"><label class="check"><input type="checkbox" id="aTerms"> <span>I am 18 or older and I accept the <a class="gold" href="#/terms" target="_blank">Terms &amp; Conditions</a> and <a class="gold" href="#/privacy" target="_blank">Privacy Policy</a>.</span></label><span class="field__err"></span></div>` : ''}
         <button class="btn btn--block" type="submit" style="margin-top:8px">${reg ? 'Create account' : 'Sign in'} ${ICON.arrow}</button>
         <p class="muted center" style="margin-top:22px">${reg ? `Already have an account? <a class="gold" href="#/login?next=${next}">Sign in</a>` : `New to Iqbal’s? <a class="gold" href="#/register?next=${next}">Create an account</a>`}</p>
         <p class="muted center" style="font-size:13px">Demo accounts are stored only in this browser.</p>
@@ -58,6 +59,7 @@ export function mountAuth(root, params, query) {
       f.classList.add('is-err');
       $('.field__err', f).textContent = msg;
     });
+    if (reg && !$('#aTerms', root).checked) { const f = $('#aTerms', root).closest('.field'); f.classList.add('is-err'); $('.field__err', f).textContent = 'Please accept the Terms & Conditions and Privacy Policy.'; errs.aTerms = 1; }
     const err = $('#authErr', root);
     err.hidden = true;
     if (Object.keys(errs).length) return $('#' + Object.keys(errs)[0], root).focus();

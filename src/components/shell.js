@@ -125,6 +125,7 @@ function mnavHTML() {
       <div class="mnav__branches">${BRANCHES.map((b) => { const st = openStatus(b); return `<div class="mnav__branch"><div><b>${b.name}</b><span class="status ${st.open ? '' : 'is-closed'}"><i></i>${st.label}</span></div>
         <div class="mnav__btns"><a class="btn btn--sm" href="tel:${b.phone.replace(/\s/g, '')}">${ICON.phone} Call</a><a class="btn btn--sm btn--wa" href="https://wa.me/${b.phoneIntl}" target="_blank" rel="noopener">${ICON.whatsapp} WhatsApp</a></div></div>`; }).join('')}</div>
       <div class="mnav__social"><a href="${BUSINESS.instagram}" target="_blank" rel="noopener" aria-label="Instagram">${ICON.instagram}</a><a href="${BUSINESS.facebook}" target="_blank" rel="noopener" aria-label="Facebook">${ICON.facebook}</a><span>NIHT certified halaal</span></div>
+      <nav class="mnav__legal" aria-label="Legal"><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/shipping">Shipping</a><a href="#/returns">Returns</a></nav>
     </div>
     <div class="mnav__panel" data-mpanel="cats" ${mnavTab === 'cats' ? '' : 'hidden'}>
       <div class="mnav__cats">${CATEGORIES.map((c) => `<a class="mnav__cat" href="#/shop?cat=${c.id}"><span class="photo"><img src="${u(c.img, 240)}" alt="" loading="lazy"></span><span><b>${c.name}</b><small>${catCount(c.id)} items · from ${money(catFrom(c.id))}</small></span>${ICON.arrow}</a>`).join('')}</div>
@@ -292,12 +293,12 @@ export function renderFooter() {
           <li><a href="#/shop?cat=braai">Braai Packs</a></li><li><a href="#/eid">Eid &amp; Ramadan</a></li><li><a href="#/shop?cat=bakery">Rotis &amp; Bakery</a></li><li><a href="#/weekly-box">Iqbal’s Weekly Box</a></li></ul></div>
         <div><h4>Help</h4><ul>
           <li><a href="#/account">My account</a></li><li><a href="#/cut-to-order">Cut to order</a></li><li><a href="#/guide">Cooking guide</a></li>
-          <li><a href="#/recipes">Recipes</a></li><li><a href="#/contact">Contact us</a></li><li><a href="#/delivery">Delivery areas</a></li><li><a href="#/functions">Functions &amp; catering</a></li><li><a href="#/meal-planner">Meal planner</a></li><li><a href="#/rewards">Iqbal’s Rewards</a></li><li><a href="#/game">Flying Steak game</a></li><li><a href="#/admin">Staff login</a></li><li><button data-open-chat class="link-plain">Ask the Butcher</button></li></ul></div>
+          <li><a href="#/recipes">Recipes</a></li><li><a href="#/contact">Contact us</a></li><li><a href="#/delivery">Delivery areas</a></li><li><a href="#/functions">Functions &amp; catering</a></li><li><a href="#/meal-planner">Meal planner</a></li><li><a href="#/rewards">Iqbal’s Rewards</a></li><li><a href="#/game">Flying Steak game</a></li><li><a href="#/shipping">Shipping policy</a></li><li><a href="#/returns">Returns &amp; refunds</a></li><li><a href="#/admin">Staff login</a></li><li><button data-open-chat class="link-plain">Ask the Butcher</button></li></ul></div>
         <div><h4>Visit us</h4><ul>
           ${BRANCHES.map((b) => `<li><b>${b.name}</b><br><span class="muted">${b.address}</span><br><a href="tel:${b.phone.replace(/\s/g, '')}">${b.phone}</a> · <span data-open-status="${b.id}">${openStatus(b).label}</span><br><small class="muted">${b.hoursLabel}</small></li>`).join('')}
           </ul></div>
         <div><h4>Crazy specials in your inbox</h4>
-          <p class="muted" style="font-size:16px">Weekly specials, Saturday giveaways and new arrivals. No spam.</p>
+          <p class="muted" style="font-size:16px">Weekly specials, Saturday giveaways and new arrivals. No spam. Unsubscribe any time; see our <a href="#/privacy" style="text-decoration:underline">Privacy Policy</a>.</p>
           <form class="news" data-news novalidate><label class="sr" for="newsEmail">Email</label><input class="input" id="newsEmail" type="email" placeholder="you@email.com" required><button class="btn" type="submit">Join</button></form>
           <div class="socials">
             <a href="${BUSINESS.instagram}" target="_blank" rel="noopener" aria-label="Instagram">${ICON.instagram}</a>
@@ -310,6 +311,7 @@ export function renderFooter() {
     </div>
     <div class="wrap footer__bottom">
       <span>© ${new Date().getFullYear()} Iqbal’s Meat &amp; Deli. All meat NIHT certified halaal.</span>
+      <nav class="footer__legal" aria-label="Legal"><a href="#/terms">Terms &amp; Conditions</a><a href="#/privacy">Privacy Policy</a><a href="#/shipping">Shipping Policy</a><a href="#/returns">Returns &amp; Refunds</a></nav>
       <span>Website by <a href="${BUSINESS.agency.url}" target="_blank" rel="noopener">Pixel Code</a></span>
     </div>`;
   $('[data-news]', f).addEventListener('submit', (e) => {
